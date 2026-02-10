@@ -1,0 +1,331 @@
+{
+  "name": "Schedule Ticket Unassign 1.2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            },
+            {
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6c281d3f-03b3-40e3-898a-9fc6f988c58c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "fromEmail": "helpdesk@example.com",
+        "toEmail": "helpdesk@example.com",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.email_body }}\n",
+        "options": {
+          "appendAttribution": false,
+          "attachments": ""
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        -32
+      ],
+      "id": "e03e0322-c963-4f61-a173-493e011e7b2a",
+      "name": "Send email To DavMail",
+      "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
+      "credentials": {
+        "smtp": {
+          "id": "o2kgNvpcg8y3t93j",
+          "name": "DavMail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "01d05d3d-e86c-406e-bf05-d1fb53333b1a",
+              "leftValue": "={{ Object.keys($json).length === 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        400,
+        0
+      ],
+      "id": "f10d1902-9e39-43a5-acb0-410f05618237",
+      "name": "If notEmpty"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        608,
+        -16
+      ],
+      "id": "13bbdc1b-b64a-4ac5-8225-7bff51df3ed1",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'pending';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2b64061c-1197-472b-9818-093bae3b8e1e",
+      "name": "Get Pending Tickets",
+      "credentials": {
+        "microsoftSql": {
+          "id": "DlMjRKIkdeMbyUDh",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'unassigned',\n    assigned_date = GETDATE(),\n    assigned_to = 'unassigned',\n    updated_date = GETDATE(),\n    updated_by = 'N8N_System_Unassigned'\nWHERE message_id = {{ $('Get Pending Tickets').item.json.message_id }};"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        -32
+      ],
+      "id": "ffff049c-2596-4261-ba9d-6ecf1d60235a",
+      "name": "Update Ticket Status",
+      "credentials": {
+        "microsoftSql": {
+          "id": "DlMjRKIkdeMbyUDh",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "q3ybqMcKYHUTu4qg",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/q3ybqMcKYHUTu4qg",
+          "cachedResultName": "LogSQLServer v1.0.1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "table_name": "[YourDatabase].[dbo].[ticket]",
+            "action_type": "UNASSIGNED",
+            "datetime": "={{ $now.toDateTime().toFormat('yyyy-MM-dd HH:mm:ss.SSS') }}",
+            "message_id": "={{ $('Loop Over Items').item.json.message_id }}",
+            "value": "=Unassigned Ticket",
+            "by": "N8N_System_Unassigned"
+          },
+          "matchingColumns": [
+            "table_name",
+            "action_type",
+            "field_name",
+            "new_value",
+            "body_events_firstItem"
+          ],
+          "schema": [
+            {
+              "id": "table_name",
+              "displayName": "table_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "action_type",
+              "displayName": "action_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "datetime",
+              "displayName": "datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "by",
+              "displayName": "by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        -32
+      ],
+      "name": "Call LogSQLServer v1.0.0",
+      "id": "ddfd21ff-9431-437d-a335-e5814081593f"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Pending Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email To DavMail": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If notEmpty": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Send email To DavMail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pending Tickets": {
+      "main": [
+        [
+          {
+            "node": "If notEmpty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Status": {
+      "main": [
+        [
+          {
+            "node": "Call LogSQLServer v1.0.0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Bangkok",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "bdaf7e58-13d6-4870-925f-a19c23b8a42c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c0ee9619a3de3f52e872fba900c2709ab5e62b555937f4f80d0077ae523c5c4c"
+  },
+  "id": "UBCa3WsUnv88uG-4Syw6l",
+  "tags": []
+}
