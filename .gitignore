@@ -1,0 +1,25 @@
+# OS specific
+.DS_Store
+Thumbs.db
+
+# n8n specific (if running locally/npm)
+node_modules
+.env
+.n8n/
+*.log
+
+# Editor
+.vscode/
+.idea/
+.claude/
+
+# Local credentials backup (just in case)
+*_credentials.json
+
+# Local Documentation
+GITHUB_PUBLISH_GUIDE.md
+CLAUDE.md
+RESTORE_GUIDE.md
+
+# Sanitizer - Local sensitive data only
+.env.sanitizer
