@@ -1,5 +1,5 @@
 {
-  "name": "Auto Assign 1.2",
+  "name": "Auto Close Ticket 1.0",
   "nodes": [
     {
       "parameters": {
@@ -12,13 +12,12 @@
           },
           "conditions": [
             {
-              "id": "0a07cf41-e726-4c90-b16f-75fb700fec43",
-              "leftValue": "={{ $('Start').item.json.quotedMessageId }}",
-              "rightValue": "",
+              "id": "ec5ad907-54ab-45c9-8674-c74e28129aa4",
+              "leftValue": "={{ $('Start').item.json.clean_text }}",
+              "rightValue": "การแก้ไขปัญหา",
               "operator": {
                 "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
+                "operation": "regex"
               }
             }
           ],
@@ -29,11 +28,31 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        6016,
-        1824
+        -480,
+        -64
       ],
-      "id": "0117606c-9722-452f-b222-1eb34d9aad8c",
-      "name": "If Reply"
+      "id": "45365134-2bba-414b-8dec-fe9bbcbaf9eb",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT TOP 1 *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE message_id = {{ $json.quotedMessageId }}\n  AND status = 'assigned';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        -160
+      ],
+      "id": "236b2d16-1bc3-4265-8ccf-02fac3d08782",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "YOUR_SQL_CREDENTIAL_ID",
+          "name": "Microsoft SQL account"
+        }
+      }
     },
     {
       "parameters": {
@@ -63,19 +82,19 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        6480,
-        1776
+        -64,
+        -160
       ],
-      "id": "3e9375eb-77a4-426a-9daa-96dadc6f7deb",
+      "id": "6ddaa216-7712-4038-90e6-8396d6195a31",
       "name": "If notEmpty"
     },
     {
       "parameters": {
         "fromEmail": "helpdesk@example.com",
         "toEmail": "helpdesk@example.com",
-        "subject": "={{ $('Lookup Ticket').item.json.subject }}",
+        "subject": "={{ $('If notEmpty').item.json.subject }}",
         "emailFormat": "text",
-        "text": "={{ $('Lookup Ticket').item.json.email_body }}\n#assign {{ $json.email_spiceworks }}\n",
+        "text": "={{ $('If notEmpty').item.json.email_body }}\n#assign {{ $json.email_spiceworks }}\n#set สาเหตุ={{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}\n#set การแก้ไขปัญหา={{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}\n#close",
         "options": {
           "appendAttribution": false,
           "attachments": ""
@@ -84,10 +103,10 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        6800,
-        1760
+        256,
+        -176
       ],
-      "id": "e83f02d2-eef4-4d01-9dc4-d50d92cd7520",
+      "id": "bc189956-5a6b-4fae-860f-5e6039de1b2e",
       "name": "Send email To DavMail",
       "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
       "retryOnFail": true,
@@ -98,8 +117,7 @@
           "id": "YOUR_EMAIL_CREDENTIAL_ID",
           "name": "DavMail"
         }
-      },
-      "disabled": true
+      }
     },
     {
       "parameters": {
@@ -116,7 +134,7 @@
           "conditions": [
             {
               "keyName": "userId",
-              "keyValue": "={{ $('Start').first().json.userId }}"
+              "keyValue": "={{ $('Start').item.json.userId }}"
             }
           ]
         }
@@ -124,117 +142,26 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6640,
-        1760
+        96,
+        -176
       ],
-      "id": "5122ca79-0fdf-4953-b69e-a64eb2c44592",
+      "id": "44c6b448-9801-41aa-b815-51ce68aad6ae",
       "name": "Match IT Team",
       "alwaysOutputData": true
     },
     {
       "parameters": {
-        "workflowInputs": {
-          "values": [
-            {
-              "name": "quotedMessageId",
-              "type": "any"
-            },
-            {
-              "name": "userId",
-              "type": "any"
-            },
-            {
-              "name": "body_events_firstItem",
-              "type": "any"
-            },
-            {
-              "name": "groupId_firstItem",
-              "type": "any"
-            },
-            {
-              "name": "userId_firstItem",
-              "type": "any"
-            },
-            {
-              "name": "displayName_firstItem",
-              "type": "any"
-            },
-            {
-              "name": "raw_text_firstItem",
-              "type": "any"
-            },
-            {
-              "name": "SET__Normalize_Clean_Text_isExecuted",
-              "type": "any"
-            },
-            {
-              "name": "raw_text",
-              "type": "any"
-            },
-            {
-              "name": "Upload_Image_isExecuted",
-              "type": "any"
-            },
-            {
-              "name": "clean_text_firstItem",
-              "type": "any"
-            },
-            {
-              "name": "clean_text",
-              "type": "any"
-            },
-            {
-              "name": "groupName_firstItem",
-              "type": "any"
-            },
-            {
-              "name": "body_events",
-              "type": "any"
-            },
-            {
-              "name": "datetime",
-              "type": "any"
-            }
-          ]
-        }
-      },
-      "id": "000df617-3c7f-452c-a911-bb5db63cc5f4",
-      "typeVersion": 1.1,
-      "name": "Start",
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "position": [
-        5792,
-        1824
-      ]
-    },
-    {
-      "parameters": {
-        "amount": 1,
-        "unit": "minutes"
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        6176,
-        1760
-      ],
-      "id": "6bdbf2a4-90a7-4300-b0d8-5c27a25d5b3f",
-      "name": "Wait",
-      "webhookId": "a2b223ee-6226-4719-bf23-7374be817a6a"
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT TOP 1 *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE message_id = {{ $json.quotedMessageId }}\n  AND status = 'pending';"
+        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'closed',\n    close_cause = N'{{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}',\n    close_reason = N'{{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').first().json.fromUser }}',\n    close_time_minute = DATEDIFF(minute, '{{ $('Microsoft SQL').item.json.assigned_date }}', GETDATE())\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
       },
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        6336,
-        1760
+        448,
+        -176
       ],
-      "id": "20a7cdec-3ff6-4971-9596-dc9beec027d9",
-      "name": "Lookup Ticket",
+      "id": "fad53733-419b-4c43-a42c-dfdccf5314a2",
+      "name": "Update Ticket Status",
       "credentials": {
         "microsoftSql": {
           "id": "YOUR_SQL_CREDENTIAL_ID",
@@ -255,11 +182,11 @@
           "mappingMode": "defineBelow",
           "value": {
             "table_name": "[YourDatabase].[dbo].[ticket]",
-            "action_type": "=UPDATE",
-            "message_id": "={{ $('Start').item.json.quotedMessageId }}",
-            "datetime": "={{ $('Start').item.json.datetime }}",
+            "action_type": "CLOSE",
+            "message_id": "={{ $('If notEmpty').first().json.message_id }}",
+            "datetime": "={{ $now.toDateTime().toFormat('yyyy-MM-dd HH:mm:ss.SSS') }}",
             "by": "={{ $('Match IT Team').item.json.fromUser }}",
-            "value": "=Assigned Ticket To {{ $('Match IT Team').item.json.fromUser }}"
+            "value": "=Closed Ticket {{ $('If notEmpty').first().json.message_id }}"
           },
           "matchingColumns": [
             "table_name",
@@ -333,52 +260,48 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        7184,
-        1760
+        640,
+        -176
       ],
-      "name": "Call LogSQLServer v1.0.0",
-      "id": "1a3d374e-dcf5-4a9e-8f72-9de0b673eefc"
+      "name": "Call LogSQLServer",
+      "id": "fdeda263-2c8f-450d-8123-cf7cc489f265"
     },
     {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'assigned',\n    assigned_to = N'{{ $('Match IT Team').item.json.fromUser }}',\n    assigned_date = '{{ $('Start').first().json.datetime }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').item.json.fromUser }}'\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.1,
-      "position": [
-        6992,
-        1760
-      ],
-      "id": "344c4802-78d1-4701-8f9c-8ecaa5ce8090",
-      "name": "Update Ticket Status",
-      "credentials": {
-        "microsoftSql": {
-          "id": "YOUR_SQL_CREDENTIAL_ID",
-          "name": "Microsoft SQL account"
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "clean_text",
+              "type": "any"
+            },
+            {
+              "name": "quotedMessageId",
+              "type": "any"
+            },
+            {
+              "name": "userId",
+              "type": "any"
+            }
+          ]
         }
-      }
+      },
+      "id": "f611bc0c-0932-4207-bbd7-fa599dd77796",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -688,
+        -64
+      ]
     }
   ],
   "pinData": {},
   "connections": {
-    "If Reply": {
+    "If": {
       "main": [
         [
           {
-            "node": "Wait",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Send email To DavMail": {
-      "main": [
-        [
-          {
-            "node": "Update Ticket Status",
+            "node": "Microsoft SQL",
             "type": "main",
             "index": 0
           }
@@ -393,8 +316,18 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
+      ]
+    },
+    "Send email To DavMail": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Match IT Team": {
@@ -408,29 +341,18 @@
         ]
       ]
     },
-    "Start": {
+    "Update Ticket Status": {
       "main": [
         [
           {
-            "node": "If Reply",
+            "node": "Call LogSQLServer",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Wait": {
-      "main": [
-        [
-          {
-            "node": "Lookup Ticket",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Lookup Ticket": {
+    "Microsoft SQL": {
       "main": [
         [
           {
@@ -441,20 +363,15 @@
         ]
       ]
     },
-    "Update Ticket Status": {
+    "Start": {
       "main": [
         [
           {
-            "node": "Call LogSQLServer v1.0.0",
+            "node": "If",
             "type": "main",
             "index": 0
           }
         ]
-      ]
-    },
-    "Call LogSQLServer v1.0.0": {
-      "main": [
-        []
       ]
     }
   },
@@ -464,13 +381,14 @@
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "timezone": "Asia/Bangkok",
-    "callerPolicy": "workflowsFromSameOwner"
+    "callerPolicy": "workflowsFromSameOwner",
+    "binaryMode": "separate"
   },
-  "versionId": "27ccc88c-8bd5-4f31-9cc4-38149a179c7b",
+  "versionId": "e993c6f4-019c-4eae-b072-f1b1a1ccade0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"
   },
-  "id": "4tIlVjstYxU09G6a",
+  "id": "USgdNP1aNHh1QJg3",
   "tags": []
 }

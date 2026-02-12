@@ -405,7 +405,7 @@ This project includes a **deterministic sanitizer tool** (`sanitize.py`) to auto
 ### What Gets Preserved
 
 - ✅ All workflow IDs (UUIDs)
-- ✅ All node IDs and names (e.g., `Get Branch SPR`, `Get Branch Franchise`)
+- ✅ All node IDs and names (e.g., `Get Branch Company`, `Get Branch Franchise`)
 - ✅ All webhook IDs
 - ✅ All credential references
 - ✅ Complete workflow structure
