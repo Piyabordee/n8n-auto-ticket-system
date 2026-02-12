@@ -1,5 +1,5 @@
 {
-  "name": "Schedule Ticket Unassign 1.2",
+  "name": "Schedule Ticket Unclose 1.2",
   "nodes": [
     {
       "parameters": {
@@ -27,9 +27,9 @@
       "parameters": {
         "fromEmail": "helpdesk@example.com",
         "toEmail": "helpdesk@example.com",
-        "subject": "={{ $json.subject }}",
+        "subject": "={{ $('If notEmpty').item.json.subject }}",
         "emailFormat": "text",
-        "text": "={{ $json.email_body }}\n",
+        "text": "={{ $('If notEmpty').item.json.email_body }}\n#assign {{ $json.email_spiceworks }}",
         "options": {
           "appendAttribution": false,
           "attachments": ""
@@ -38,7 +38,7 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        816,
+        944,
         -32
       ],
       "id": "e03e0322-c963-4f61-a173-493e011e7b2a",
@@ -101,7 +101,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'pending';"
+        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'assigned';"
       },
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
@@ -121,12 +121,12 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'unassigned',\n    assigned_date = GETDATE(),\n    assigned_to = 'unassigned',\n    updated_date = GETDATE(),\n    updated_by = 'N8N_System_Unassigned'\nWHERE message_id = {{ $('Get Pending Tickets').item.json.message_id }};"
+        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'Unclose',\n    assigned_date = GETDATE(),\n    assigned_to = N'{{ $('Match IT Team').item.json.fromUser }}',\n    updated_date = GETDATE(),\n    updated_by = 'N8N_System_Unclose'\nWHERE message_id = {{ $('Get Pending Tickets').item.json.message_id }};"
       },
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        992,
+        1120,
         -32
       ],
       "id": "ffff049c-2596-4261-ba9d-6ecf1d60235a",
@@ -151,11 +151,11 @@
           "mappingMode": "defineBelow",
           "value": {
             "table_name": "[YourDatabase].[dbo].[ticket]",
-            "action_type": "UNASSIGNED",
+            "action_type": "UNCLOSE",
             "datetime": "={{ $now.toDateTime().toFormat('yyyy-MM-dd HH:mm:ss.SSS') }}",
             "message_id": "={{ $('Loop Over Items').item.json.message_id }}",
-            "value": "=Unassigned Ticket",
-            "by": "N8N_System_Unassigned"
+            "value": "=Unclose Ticket ",
+            "by": "N8N_System_Unclose"
           },
           "matchingColumns": [
             "table_name",
@@ -229,11 +229,41 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1184,
+        1312,
         -32
       ],
       "name": "Call LogSQLServer v1.0.0",
       "id": "ddfd21ff-9431-437d-a335-e5814081593f"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "qxjykIZZNaErzW0k",
+          "mode": "list",
+          "cachedResultName": "IT_Team",
+          "cachedResultUrl": "/projects/k123tPaALfk1YRzS/datatables/qxjykIZZNaErzW0k"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "fromUser",
+              "keyValue": "={{ $('If notEmpty').item.json.assigned_to }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -32
+      ],
+      "id": "c4ad9d70-59c6-4c2d-9fcc-b63982c71cbf",
+      "name": "Match IT Team",
+      "alwaysOutputData": true
     }
   ],
   "pinData": {},
@@ -276,7 +306,7 @@
       "main": [
         [
           {
-            "node": "Send email To DavMail",
+            "node": "Match IT Team",
             "type": "main",
             "index": 0
           }
@@ -311,6 +341,17 @@
           }
         ]
       ]
+    },
+    "Match IT Team": {
+      "main": [
+        [
+          {
+            "node": "Send email To DavMail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -321,7 +362,7 @@
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "bdaf7e58-13d6-4870-925f-a19c23b8a42c",
+  "versionId": "2619d57a-8eef-4cc7-80af-3d07e682d45a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c0ee9619a3de3f52e872fba900c2709ab5e62b555937f4f80d0077ae523c5c4c"

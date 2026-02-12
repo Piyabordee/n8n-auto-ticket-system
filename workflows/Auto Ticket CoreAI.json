@@ -39,7 +39,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=ปัญหา: {{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}",
+        "text": "=ปัญหา: {{ $('Start').first().json.clean_text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}",
         "hasOutputParser": true,
         "messages": {
           "messageValues": [
@@ -135,7 +135,7 @@
             {
               "id": "b9dd931c-1427-405c-98a9-c7121ce57217",
               "name": "email_body",
-              "value": "=[{{ $('Core Agent').item.json.output.intent }}-{{ $('Core Agent').item.json.output.category }}]\n{{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}\n\n[ผู้แจ้ง] {{ $('Start').first().json.from_ticket_firstItem }}\n[หมวดหมู่] {{ $json['#category'] ||  $json['#sub_category']}}\n[หมวดหมู่ย่อย] {{ $('Merge').item.json.output.sub_category }}\n[บริษัท] {{ $('FInd Branch').item.json.output.company }}\n[สาขา] {{ $('FInd Branch').item.json.output.branch_name }}\n[เวลา] {{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).toFormat('dd-MM-yyyy HH:mm:ss') }}\n\n#category {{ $json['#category'] }}\n#set {{ $json['#branch'] }}={{ $('Merge').item.json.output.branch_name }}\n{{ $json['#sub_category'].toString().replace(/=?\\s*Printer/i, '').trim() }}\n#set Contact=Line แจ้งปัญหาและแจ้งซ่อม\n#set Day={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setLocale('en').toFormat('cccc') }}\n#set User ที่แจ้ง={{ $('Start').first().json.from_ticket_firstItem }}",
+              "value": "={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}\n\n[ผู้แจ้ง] {{ $('Start').first().json.from_ticket_firstItem }}\n[หมวดหมู่] {{ $json['#category'] ||  $json['#sub_category']}}\n[หมวดหมู่ย่อย] {{ $('Merge').item.json.output.sub_category }}\n[บริษัท] {{ $('FInd Branch').item.json.output.company }}\n[สาขา] {{ $('FInd Branch').item.json.output.branch_name }}\n[เวลา] {{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).toFormat('dd-MM-yyyy HH:mm:ss') }}\n\n#category {{ $json['#category'] }}\n#set {{ $json['#branch'] }}={{ $('Merge').item.json.output.branch_name }}\n{{ $json['#sub_category'].toString().replace(/=?\\s*Printer/i, '').trim() }}\n#set Contact=Line แจ้งปัญหาและแจ้งซ่อม\n#set Day={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setLocale('en').toFormat('cccc') }}\n#set User ที่แจ้ง={{ $('Start').first().json.from_ticket_firstItem }}",
               "type": "string"
             }
           ]
@@ -174,7 +174,7 @@
             {
               "id": "06e1c629-cf43-469f-9f73-0ec894041707",
               "name": "#category",
-              "value": "={{ \n(() => {\n  const c = $('Core Agent').item.json.output.category;\n  const m = {\n    'SW': 'Software',\n    'NETWORK': 'Network',\n    'CAMERA': 'Camera', \n    'PRINTER': 'Printer', \n    'RATE': 'Software', \n    'POS': 'Software', \n    'REQUEST' : 'Requested',\n    'HW': 'Hardware'\n  };\n  return m[c] ? `${m[c]}` : '';\n})() \n}}",
+              "value": "={{ \n(() => {\n  const c = $('Core Agent').item.json.output.category;\n  const m = {\n    'SW': 'Software',\n    'NETWORK': 'Network',\n    'CAMERA': 'Camera', \n    'PRINTER': 'Printer', \n    'RATE': 'Software', \n    'POS': 'Software', \n    'REQUEST' : 'Requested',\n    'PASSWORD' : 'Password Reset',\n    'HW': 'Hardware'\n  };\n  return m[c] ? `${m[c]}` : '';\n})() \n}}",
               "type": "string"
             },
             {
@@ -330,7 +330,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=Role: IT Support Classifier & Data Extractor.\nCategory List:\n{{ $('Get Category').all().map(item => `- ${item.json.Name}${item.json.Alias ? ' (Keywords: ' + item.json.Alias + ')' : ''}`).join(\"\\n\") }}\n\nTASK:\n1. Extract Branch: Name found in text, else null.\n2. Determine Category: Match with Category List. (Priority: Hardware/Printer > Others).\n3. Identify Intent: \"INC\" (broken/error) or \"SR\" (request/setup).\n4. Generate Subject Summary: (THAI ONLY).\n\nSUMMARY FORMAT:\n\"[Branch] [Position/ID] [Device/Object] [Short Symptom]\"\n- Include identifiers like \"เคาน์เตอร์ 5\" or \"เครื่อง 2\" if present.\n- Tone: Professional, no polite particles (No ครับ/ค่ะ).\n- Technical terms (POS/LAN/WiFi/Printer) remain in English.\n- Max 60 characters.\n\nSPECIAL RULES:\n- \"PSS\" keyword -> Category: Software.\n- \"POS machine\" keyword -> Category: POS.\n- \"แก้ไข MC\" or \"เพิ่มลายเส้น MC\" -> Category: REQUEST, Intent: SR."
+              "message": "=Role: IT Support Classifier & Data Extractor.\nCategory List:\n{{ $('Get Category').all().map(item => `- ${item.json.Name}${item.json.Alias ? ' (Keywords: ' + item.json.Alias + ')' : ''}`).join(\"\\n\") }}\n\nTASK:\n1. Extract Branch: Name found in text, else null.\n2. Determine Category: Match with Category List. (Priority: Hardware/Printer > Others).\n3. Identify Intent: \"INC\" (broken/error) or \"SR\" (request/setup).\n4. Generate Subject Summary: (THAI ONLY).\n\nSUMMARY FORMAT:\n\"[Branch] [Position/ID] [Device/Object] [Short Symptom]\"\n- Include identifiers like \"เคาน์เตอร์ 5\" or \"เครื่อง 2\" if present.\n- Tone: Professional, no polite particles (No ครับ/ค่ะ).\n- Technical terms (POS/LAN/WiFi/Printer) remain in English.\n- Max 60 characters.\n\nSPECIAL RULES:\n- \"Server\" -> Category: HW.\n- \"PSS\" keyword -> Category: SW.\n- \"POS machine\" keyword -> Category: POS.\n- \"แก้ไข MC\" or \"เพิ่มลายเส้น MC\" -> Category: REQUEST, Intent: SR."
             }
           ]
         },
@@ -984,7 +984,7 @@
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "343cabfc-e58e-4c4b-b076-e7c666277b28",
+  "versionId": "40bddbed-1497-4638-b24a-29e567c6c13a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c0ee9619a3de3f52e872fba900c2709ab5e62b555937f4f80d0077ae523c5c4c"

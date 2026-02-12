@@ -67,7 +67,7 @@
             {
               "id": "7aa37dfc-3fc3-474b-a776-5fb0130e9828",
               "name": "timpstamp",
-              "value": "={{ new Date($('Webhook Line').item.json.body.events[0].timestamp).toISOString().replace('T', ' ').replace('Z', '') }}",
+              "value": "={{ DateTime.fromMillis($('Webhook Line').item.json.body.events[0].timestamp).setZone('Asia/Bangkok').toFormat('yyyy-MM-dd HH:mm:ss.SSS') }}",
               "type": "string"
             },
             {
@@ -733,204 +733,6 @@
     },
     {
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "4tIlVjstYxU09G6a",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/4tIlVjstYxU09G6a",
-          "cachedResultName": "Auto Assign 1.2"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "quotedMessageId": "={{ $('SET - Extract Sender IDs').item.json.quotedMessageId }}",
-            "userId": "={{ $('SET - Extract Sender IDs').item.json.userId }}",
-            "body_events_firstItem": "={{ $('Webhook Line').first().json.body.events }}",
-            "groupId_firstItem": "={{ $('Get Group/Room Summary').first().json.groupId }}",
-            "userId_firstItem": "={{ $('HTTP - Get Sender Profile').first().json.userId }}",
-            "displayName_firstItem": "={{ $('HTTP - Get Sender Profile').first().json.displayName }}",
-            "raw_text_firstItem": "={{ $('SET - Normalize Clean Text').first().json.raw_text }}",
-            "SET__Normalize_Clean_Text_isExecuted": "={{ $('SET - Normalize Clean Text').isExecuted }}",
-            "raw_text": "={{ $('SET - Normalize Clean Text').item.json.raw_text }}",
-            "Upload_Image_isExecuted": "={{ $('Upload Image').isExecuted }}",
-            "clean_text_firstItem": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
-            "clean_text": "={{ $('SET - Normalize Clean Text').item.json.clean_text }}",
-            "groupName_firstItem": "={{ $('Get Group/Room Summary').first().json.groupName }}",
-            "body_events": "={{ $('Webhook Line').item.json.body.events }}",
-            "datetime": "={{ $('SET - Extract Sender IDs').item.json.timpstamp }}"
-          },
-          "matchingColumns": [
-            "quotedMessageId",
-            "userId",
-            "body_events_firstItem",
-            "groupId_firstItem",
-            "userId_firstItem",
-            "displayName_firstItem",
-            "raw_text_firstItem",
-            "SET__Normalize_Clean_Text_isExecuted",
-            "raw_text",
-            "Upload_Image_isExecuted",
-            "clean_text_firstItem",
-            "clean_text",
-            "groupName_firstItem",
-            "body_events"
-          ],
-          "schema": [
-            {
-              "id": "quotedMessageId",
-              "displayName": "quotedMessageId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "userId",
-              "displayName": "userId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "body_events_firstItem",
-              "displayName": "body_events_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "groupId_firstItem",
-              "displayName": "groupId_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "userId_firstItem",
-              "displayName": "userId_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "displayName_firstItem",
-              "displayName": "displayName_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "raw_text_firstItem",
-              "displayName": "raw_text_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "SET__Normalize_Clean_Text_isExecuted",
-              "displayName": "SET__Normalize_Clean_Text_isExecuted",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "raw_text",
-              "displayName": "raw_text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Upload_Image_isExecuted",
-              "displayName": "Upload_Image_isExecuted",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "clean_text_firstItem",
-              "displayName": "clean_text_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "clean_text",
-              "displayName": "clean_text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "groupName_firstItem",
-              "displayName": "groupName_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "body_events",
-              "displayName": "body_events",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "datetime",
-              "displayName": "datetime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
-      "position": [
-        6832,
-        2304
-      ],
-      "name": "Call Auto Assign 1.0",
-      "id": "b7bd05da-4ba3-483c-9d35-bf68dfb8e0f0",
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 5000
-    },
-    {
-      "parameters": {
         "operation": "get",
         "dataTableId": {
           "__rl": true,
@@ -1124,6 +926,271 @@
       "id": "a4cdb563-08a7-4462-b8d9-9d94bc31bbe5",
       "name": "Wait",
       "webhookId": "561b5940-cbd7-4446-ba83-bc15133828f7"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "USgdNP1aNHh1QJg3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/USgdNP1aNHh1QJg3",
+          "cachedResultName": "Auto Close Ticket 1.0"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "clean_text": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
+            "quotedMessageId": "={{ $('Webhook Line').item.json.body.events[0].message.quotedMessageId }}",
+            "userId": "={{ $('Webhook Line').item.json.body.events[0].source.userId }}"
+          },
+          "matchingColumns": [
+            "clean_text",
+            "body_events"
+          ],
+          "schema": [
+            {
+              "id": "clean_text",
+              "displayName": "clean_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "quotedMessageId",
+              "displayName": "quotedMessageId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        7008,
+        2288
+      ],
+      "name": "Call Auto Close Ticket",
+      "id": "bb16aa9a-67fe-41f2-87ae-51aa28831f1c",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4tIlVjstYxU09G6a",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/4tIlVjstYxU09G6a",
+          "cachedResultName": "Auto Assign 1.2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "quotedMessageId": "={{ $('SET - Extract Sender IDs').item.json.quotedMessageId }}",
+            "userId": "={{ $('SET - Extract Sender IDs').item.json.userId }}",
+            "body_events_firstItem": "={{ $('Webhook Line').first().json.body.events }}",
+            "groupId_firstItem": "={{ $('Get Group/Room Summary').first().json.groupId }}",
+            "userId_firstItem": "={{ $('HTTP - Get Sender Profile').first().json.userId }}",
+            "displayName_firstItem": "={{ $('HTTP - Get Sender Profile').first().json.displayName }}",
+            "raw_text_firstItem": "={{ $('SET - Normalize Clean Text').first().json.raw_text }}",
+            "SET__Normalize_Clean_Text_isExecuted": "={{ $('SET - Normalize Clean Text').isExecuted }}",
+            "raw_text": "={{ $('SET - Normalize Clean Text').item.json.raw_text }}",
+            "Upload_Image_isExecuted": "={{ $('Upload Image').isExecuted }}",
+            "clean_text_firstItem": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
+            "clean_text": "={{ $('SET - Normalize Clean Text').item.json.clean_text }}",
+            "groupName_firstItem": "={{ $('Get Group/Room Summary').first().json.groupName }}",
+            "body_events": "={{ $('Webhook Line').item.json.body.events }}",
+            "datetime": "={{ $('SET - Extract Sender IDs').item.json.timpstamp }}"
+          },
+          "matchingColumns": [
+            "quotedMessageId",
+            "userId",
+            "body_events_firstItem",
+            "groupId_firstItem",
+            "userId_firstItem",
+            "displayName_firstItem",
+            "raw_text_firstItem",
+            "SET__Normalize_Clean_Text_isExecuted",
+            "raw_text",
+            "Upload_Image_isExecuted",
+            "clean_text_firstItem",
+            "clean_text",
+            "groupName_firstItem",
+            "body_events"
+          ],
+          "schema": [
+            {
+              "id": "quotedMessageId",
+              "displayName": "quotedMessageId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "body_events_firstItem",
+              "displayName": "body_events_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "groupId_firstItem",
+              "displayName": "groupId_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "userId_firstItem",
+              "displayName": "userId_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "displayName_firstItem",
+              "displayName": "displayName_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "raw_text_firstItem",
+              "displayName": "raw_text_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SET__Normalize_Clean_Text_isExecuted",
+              "displayName": "SET__Normalize_Clean_Text_isExecuted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "raw_text",
+              "displayName": "raw_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Upload_Image_isExecuted",
+              "displayName": "Upload_Image_isExecuted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "clean_text_firstItem",
+              "displayName": "clean_text_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "clean_text",
+              "displayName": "clean_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "groupName_firstItem",
+              "displayName": "groupName_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "body_events",
+              "displayName": "body_events",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "datetime",
+              "displayName": "datetime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        6816,
+        2288
+      ],
+      "name": "Call Auto Assign",
+      "id": "b7bd05da-4ba3-483c-9d35-bf68dfb8e0f0",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": true
     }
   ],
   "pinData": {},
@@ -1310,7 +1377,7 @@
       "main": [
         [
           {
-            "node": "Call Auto Assign 1.0",
+            "node": "Call Auto Assign",
             "type": "main",
             "index": 0
           }
@@ -1350,6 +1417,17 @@
           }
         ]
       ]
+    },
+    "Call Auto Assign": {
+      "main": [
+        [
+          {
+            "node": "Call Auto Close Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1359,7 +1437,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "c2183a5a-b2ca-444a-beb4-82bfafd9c044",
+  "versionId": "bfc53bca-de13-488a-a7b9-1e9d52fd7638",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c0ee9619a3de3f52e872fba900c2709ab5e62b555937f4f80d0077ae523c5c4c"

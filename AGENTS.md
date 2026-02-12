@@ -1,23 +1,24 @@
-# Auto_Ticket_1.7.1 - n8n Workflow Context Documentation
+# Auto_Ticket_1.7 - n8n Workflow Context Documentation
 
-> **Version**: 1.7.1
-> **Purpose**: Automated IT Helpdesk Ticketing System with Auto-Assignment & Audit Logging
+> **Version**: 1.7
+> **Purpose**: Automated IT Helpdesk Ticketing System with Auto-Assignment, Auto-Close & Audit Logging
 > **Integration**: LINE Messaging API + AI Classification + Microsoft SQL Server + Sub-Workflow Architecture
-> **Related Workflows**: Auto Ticket CoreAI 1.3, Auto Assign 1.2, Schedule Ticket Unassign 1.2, LogSQLServer v1.0.1
+> **Related Workflows**: Auto Ticket CoreAI 1.3, Auto Assign 1.2, Auto Close Ticket 1.0, Schedule Ticket Unclose 1.2, LogSQLServer v1.0.1
 
 ---
 
-## 📌 Overview
+##  Overview
 
 This workflow system automates IT helpdesk ticketing process with following architecture:
 
-### Main Workflow (Auto Ticket 1.7.1)
+### Main Workflow (Auto Ticket 1.7)
 1. Receiving messages from LINE groups/rooms
 2. Processing different message types (text, image, video, sticker, etc.)
 3. Detecting ticket patterns and routing to AI processing
 4. **Unsend Detection**: Handles unsend events and marks pending tickets as "unsent"
 5. **IT Team Detection**: Checks if sender is IT staff to route to Auto-Assign
-6. Logging all activity to Microsoft SQL Server
+6. **Auto-Close Detection**: Routes to Auto Close Ticket for IT staff closing tickets
+7. Logging all activity to Microsoft SQL Server
 
 ### Sub-Workflow: Auto Assign 1.2
 1. Called when IT staff replies to messages
@@ -26,6 +27,16 @@ This workflow system automates IT helpdesk ticketing process with following arch
 4. Matches IT staff and sends email with `#assign` command
 5. Updates ticket status to "assigned" with assignment info
 6. Calls LogSQLServer sub-workflow for audit logging
+7. **Chains to Auto Close Ticket** for further processing
+
+### Sub-Workflow: Auto Close Ticket 1.0 (NEW)
+1. Called after Auto Assign when IT staff replies
+2. **Close Detection**: Checks if message contains "การแก้ไขปัญหา"
+3. Looks up assigned tickets by `quotedMessageId`
+4. Extracts `close_cause` (อาการ/ปัญหาอาการ) and `close_reason` (การแก้ไขปัญหา)
+5. Matches IT Team and sends email with `#close` command
+6. Updates ticket status to "closed" with calculated `close_time_minute`
+7. Calls LogSQLServer sub-workflow for audit logging
 
 ### Sub-Workflow: Auto Ticket CoreAI 1.3
 1. AI classification using OpenRouter LLM (deepseek/deepseek-chat-v3.1)
@@ -34,56 +45,62 @@ This workflow system automates IT helpdesk ticketing process with following arch
 4. Uses Microsoft SQL Server for data storage
 5. Calls LogSQLServer sub-workflow for audit logging
 
-### Schedule Workflow (Schedule Ticket Unassign 1.2)
+### Schedule Workflow (Schedule Ticket Unclose 1.2)
 1. Runs at 12:00 and 18:00 daily
-2. **Loop Over Items**: Processes pending tickets one by one
-3. Sends pending tickets that haven't been assigned
-4. Updates ticket status to "unassigned"
+2. **Loop Over Items**: Processes assigned tickets one by one
+3. Sends assigned tickets that haven't been closed
+4. Updates ticket status to "Unclose"
 5. Calls LogSQLServer sub-workflow for audit logging
 
 ### Audit Logging Workflow (LogSQLServer v1.0.1)
-1. **Centralized Audit Log**: Records all ticket operations (INSERT, UPDATE, UNSEND, UNASSIGNED)
+1. **Centralized Audit Log**: Records all ticket operations (INSERT, UPDATE, UNSEND, UNASSIGNED, CLOSE, UNCLOSE)
 2. **SELECT TOP (1)**: Retrieves latest ticket record by message_id
 3. **Set Insert Log**: Prepares log data with table_name, action_type, value, datetime, by
 4. **Insert Log**: Inserts audit record into [YourDatabase].[dbo].[log] table
-5. **Called By**: Auto Ticket CoreAI 1.3, Auto Assign 1.2, Schedule Ticket Unassign 1.2, Auto Ticket 1.7.1 (unsend)
+5. **Called By**: Auto Ticket CoreAI 1.3, Auto Assign 1.2, Auto Close Ticket 1.0, Schedule Ticket Unclose 1.2, Auto Ticket 1.7 (unsend)
 
 ---
 
-## 🔷 System Architecture
+##  System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Auto Ticket 1.7.1 (Main)                          │
-│                                                                             │
-│  Webhook Line ──► Limit ──► Extract IDs ──► Get Profile ──► Get Summary    │
-│       │                                                           │         │
-│       ▼                                                      Switch        │
-│                                                       │         │
-│                                    ┌───────────────────────────────┤         │
-│                       [memberJoined] [sticker] [unsend] [memberLeft] [Default]
-│                              │          │         │          │          │   │
-│                             Set        Set   Update SQL   Set     If image? │
-│                                    (member)   (unsent)  (member)         │   │
-│                                                              ┌──────┴───┐│
-│                                                        If notEmpty? [Yes]     [No] │
-│                                                        ┌───┴───┐       │          ││
-│                                                     [Yes]   [No]   Image Upload   ││
-│                                                       │           │     Normalize│
-│                                                  Call LogSQL    │              │   │
-│                                                       │           └──────┬───────┘│
-│                                                       └──────────────────────┘   │
-│                                                               Get IT Team          │
-│                                                          If IT Team?       │
-│                                                     ┌────────┴────────┐    │
-│                                                   [Yes]            [No]    │
-│                                                     │                │     │
-│                                           Call Auto Assign     If Ticket?  │
-│                                                                ┌────┴────┐ │
-│                                                              [Yes]    [No] │
-│                                                                │        │  │
-│                                                      Call CoreAI 1.3     │
-└─────────────────────────────────────────────────────────────────────────────┘
+ Line ──► Limit ──► Extract IDs ──► Get Profile ──► Get Summary    │
+       │                                                           │
+       ▼                                                      Switch        │
+                                                       │         │
+                                    ┌───────────────────────────────┤         │
+                       [memberJoined] [sticker] [unsend] [memberLeft] [Default]
+                              │          │         │          │          │   │
+                             Set        Set   Update SQL   Set     If image? │
+                                    (member)   (unsent)  (member)         │   │
+                                                              ┌──────┴───┐│
+                                                        If notEmpty? [Yes]     [No] │
+                                                        ┌───┴───┐       │          ││
+                                                     [Yes]   [No]   Image Upload   ││
+                                                       │           │     Normalize│
+                                                  Call LogSQL    │              │   │
+                                                       │           └──────┬───────┘│
+                                                       └──────────────────────┘   │
+                                                               Get IT Team          │
+                                                          If IT Team?       │
+                                                     ┌────────┴────────┐    │
+                                                   [Yes]            [No]    │
+                                                     │                │     │
+                                           Call Auto Assign     If Ticket?  │
+                                                     │                ┌────┴────┐ │
+                                                     │              [Yes]    [No] │
+                                                     │                │        │  │
+                                          ┌──────────┤        Call CoreAI 1.3     │
+                                          ▼          ▼                               │
+                                   If Contains        │                               │
+                                  "การแก้ไขปัญหา"?    │                               │
+                                        │             │                               │
+                                   ┌────┴────┐        │                               │
+                                [Yes]      [No]     │                               │
+                                  │          │       │                               │
+                         Call Auto Close   (end)    │                               │
+                                  Ticket              │                               │
+
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                     Auto Assign 1.2 (Sub-Workflow)                          │
@@ -102,6 +119,24 @@ This workflow system automates IT helpdesk ticketing process with following arch
 │                                              Call LogSQLServer              │
 │                                                      │                      │
 │                                                    (end)                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                  Auto Close Ticket 1.0 (Sub-Workflow) NEW                   │
+│                                                                             │
+│  Start ──► If Contains "การแก้ไขปัญหา" ──► Lookup Ticket ──► If notEmpty │
+│                                               │            │                │
+│                                             [No]          [Yes]             │
+│                                               │              │               │
+│                                             Log        Match IT Team        │
+│                                                         │                  │
+│                                              Send email DavMail             │
+│                                                         │                  │
+│                                              Update SQL (closed)            │
+│                                                         │                  │
+│                                              Call LogSQLServer              │
+│                                                         │                  │
+│                                                       (end)                │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -126,9 +161,9 @@ This workflow system automates IT helpdesk ticketing process with following arch
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 Schedule Ticket Unassign 1.2 (Scheduled)                    │
+│                 Schedule Ticket Unclose 1.2 (Scheduled)                     │
 │                                                                             │
-│  Schedule (12:00, 18:00) ──► Get Pending Tickets ──► If notEmpty ──►       │
+│  Schedule (12:00, 18:00) ──► Get Assigned Tickets ──► If notEmpty ──►      │
 │                                                              │              │
 │                                                       Loop Over Items       │
 │                                                              │              │
@@ -148,9 +183,9 @@ This workflow system automates IT helpdesk ticketing process with following arch
 
 ---
 
-## 🔷 Workflow Triggers
+##  Workflow Triggers
 
-### Auto Ticket 1.7.1
+### Auto Ticket 1.7
 | Property | Value |
 |----------|-------|
 | **Type** | Webhook (POST) |
@@ -164,18 +199,26 @@ This workflow system automates IT helpdesk ticketing process with following arch
 |----------|-------|
 | **Type** | Execute Workflow Trigger |
 | **Node Name** | `Start` |
-| **Called By** | Auto Ticket 1.7.1 via `Call Auto Assign 1.0` node |
+| **Called By** | Auto Ticket 1.7 via `Call Auto Assign` node |
 | **Workflow ID** | `4tIlVjstYxU09G6a` |
+
+### Auto Close Ticket 1.0 (NEW)
+| Property | Value |
+|----------|-------|
+| **Type** | Execute Workflow Trigger |
+| **Node Name** | `Start` |
+| **Called By** | Auto Ticket 1.7 via `Call Auto Close Ticket` node (after Auto Assign) |
+| **Workflow ID** | `USgdNP1aNHh1QJg3` |
 
 ### Auto Ticket CoreAI 1.3
 | Property | Value |
 |----------|-------|
 | **Type** | Execute Workflow Trigger |
 | **Node Name** | `Start` |
-| **Called By** | Auto Ticket 1.7.1 via `Call Auto Ticket CoreAI` node |
+| **Called By** | Auto Ticket 1.7 via `Call Auto Ticket CoreAI` node |
 | **Workflow ID** | `vnzG9J1ipCdgk5Q4` |
 
-### Schedule Ticket Unassign 1.2
+### Schedule Ticket Unclose 1.2
 | Property | Value |
 |----------|-------|
 | **Type** | Schedule Trigger |
@@ -188,12 +231,12 @@ This workflow system automates IT helpdesk ticketing process with following arch
 |----------|-------|
 | **Type** | Execute Workflow Trigger |
 | **Node Name** | `Start` |
-| **Called By** | Auto Ticket 1.7.1 (unsend), Auto Ticket CoreAI 1.3, Auto Assign 1.2, Schedule Ticket Unassign 1.2 |
+| **Called By** | Auto Ticket 1.7 (unsend), Auto Ticket CoreAI 1.3, Auto Assign 1.2, Auto Close Ticket 1.0, Schedule Ticket Unclose 1.2 |
 | **Workflow ID** | `q3ybqMcKYHUTu4qg` |
 
 ---
 
-## 🔷 Main Flow (Auto Ticket 1.7.1) - Node Details
+##  Main Flow (Auto Ticket 1.7) - Node Details
 
 ### 1. Entry Nodes
 
@@ -252,7 +295,7 @@ This workflow system automates IT helpdesk ticketing process with following arch
 |-----------|------|---------|
 | `Get IT Team` | Data Table | Fetches IT staff data by userId |
 | `If not IT Team` | If | Checks if sender is active IT staff (`active` = "Y") |
-| **True Branch** | → | Call Auto Assign 1.0 (for reply handling) |
+| **True Branch** | → | Call Auto Assign (for reply handling) |
 | **False Branch** | → | Proceed to `If Ticket` check |
 
 ### 8. Ticket Detection
@@ -268,7 +311,8 @@ This workflow system automates IT helpdesk ticketing process with following arch
 | Node Name | Type | Purpose |
 |-----------|------|---------|
 | `Call Auto Ticket CoreAI` | Execute Workflow | Calls CoreAI 1.3 for AI classification |
-| `Call Auto Assign 1.0` | Execute Workflow | Calls Auto Assign 1.2 for IT staff reply handling |
+| `Call Auto Assign` | Execute Workflow | Calls Auto Assign 1.2 for IT staff reply handling |
+| `Call Auto Close Ticket` | Execute Workflow | **NEW**: Calls Auto Close Ticket 1.0 for closing tickets |
 
 ### 10. Output Notes
 
@@ -276,7 +320,7 @@ This workflow system automates IT helpdesk ticketing process with following arch
 
 ---
 
-## 🔷 Auto Assign 1.2 (Sub-Workflow) - Node Details
+##  Auto Assign 1.2 (Sub-Workflow) - Node Details
 
 ### 1. Input Parameters
 
@@ -303,7 +347,7 @@ This workflow system automates IT helpdesk ticketing process with following arch
 | `Lookup Ticket` | Microsoft SQL | Finds ticket by `quotedMessageId` where `status` = "pending" |
 | `If notEmpty` | If | Checks if pending ticket was found |
 | `Match IT Team` | Data Table | Gets IT staff profile by userId |
-| `Send email To DavMail` | Email Send | Sends email with `#assign` command |
+| `Send email To DavMail` | Email Send | **DISABLED** - Email sending disabled |
 | `Update Ticket Status` | Microsoft SQL | Updates `status` = "assigned", `assigned_to`, `assigned_date` |
 | `Call LogSQLServer v1.0.0` | Execute Workflow | Calls LogSQLServer sub-workflow for audit logging |
 
@@ -312,14 +356,63 @@ This workflow system automates IT helpdesk ticketing process with following arch
 ```
 Start → If Reply?
            ├─[Yes]→ Wait (1 min) → Lookup Ticket → If notEmpty?
-           │                                           ├─[Yes]→ Match IT Team → Send Email → Update SQL → Call LogSQLServer → (end)
+           │                                           ├─[Yes]→ Match IT Team → [Email Disabled] → Update SQL → Call LogSQLServer → (end)
            │                                           └─[No]→ (end)
            └─[No]→ (end)
 ```
 
 ---
 
-## 🔷 Sub-Workflow (Auto Ticket CoreAI 1.3) - Node Details
+##  Auto Close Ticket 1.0 (Sub-Workflow) - Node Details (NEW)
+
+### 1. Input Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `clean_text` | Normalized clean text from message |
+| `quotedMessageId` | ID of the message being replied to |
+| `userId` | User ID of the replier |
+
+### 2. Processing Nodes
+
+| Node Name | Type | Purpose |
+|-----------|------|---------|
+| `Start` | Execute Workflow Trigger | Receives input from Auto Assign |
+| `If` | If | Checks if `clean_text` contains "การแก้ไขปัญหา" |
+| `Microsoft SQL` | Microsoft SQL | Finds ticket by `quotedMessageId` where `status` = "assigned" |
+| `If notEmpty` | If | Checks if assigned ticket was found |
+| `Match IT Team` | Data Table | Gets IT staff profile by userId |
+| `Send email To DavMail` | Email Send | Sends email with `#close` command including cause and reason |
+| `Update Ticket Status` | Microsoft SQL | Updates `status` = "closed", `close_cause`, `close_reason`, `close_time_minute` |
+
+### 3. Flow Logic
+
+```
+Start → If contains "การแก้ไขปัญหา"?
+           ├─[Yes]→ Lookup Ticket → If notEmpty?
+           │                            ├─[Yes]→ Match IT Team → Send Email → Update SQL → Call LogSQLServer → (end)
+           │                            └─[No]→ (end)
+           └─[No]→ (end)
+```
+
+### 4. Close Data Extraction
+
+The workflow extracts two key pieces of information from the message:
+- **close_cause**: Extracted from pattern `(?:อาการ|ปัญหาอาการ)[\s=:]*([\s\S]*?)(?=\s*การแก้ไขปัญหา)`
+- **close_reason**: Extracted from pattern `การแก้ไขปัญหา[\s=:]*([\s\S]*?)(?=\s*@|$)`
+
+### 5. Email Format
+
+The email sent includes:
+- Original email body from ticket
+- `#assign` command with IT staff email
+- `#set สาเหตุ=<cause>`
+- `#set การแก้ไขปัญหา=<reason>`
+- `#close` command
+
+---
+
+##  Sub-Workflow (Auto Ticket CoreAI 1.3) - Node Details
 
 ### 1. Input Parameters
 
@@ -381,21 +474,21 @@ Start → If Reply?
 
 ---
 
-## 🔷 Schedule Workflow (Schedule Ticket Unassign 1.2) - Node Details
+##  Schedule Workflow (Schedule Ticket Unclose 1.2) - Node Details
 
 | Node Name | Type | Purpose |
 |-----------|------|---------|
 | `Schedule Trigger` | Schedule | Triggers at 12:00 and 18:00 daily |
-| `Get Pending Tickets` | Microsoft SQL | Gets rows where `status` = "pending" |
-| `If notEmpty` | If | Checks if any pending tickets exist |
+| `Get Pending Tickets` | Microsoft SQL | Gets rows where `status` = "assigned" |
+| `If notEmpty` | If | Checks if any assigned tickets exist |
 | `Loop Over Items` | Split In Batches | Processes tickets one by one (batch size: 1) |
 | `Send email To DavMail` | Email Send | Sends ticket email (no assignment) |
-| `Update Ticket Status` | Microsoft SQL | Updates `status` = "unassigned", `assigned_to` = "unassigned" |
+| `Update Ticket Status` | Microsoft SQL | Updates `status` = "Unclose", `assigned_to` = IT staff name |
 | `Call LogSQLServer v1.0.0` | Execute Workflow | Calls LogSQLServer for audit logging |
 
 ### Flow Logic
 ```
-Schedule Trigger → Get Pending Tickets → If notEmpty?
+Schedule Trigger → Get Assigned Tickets → If notEmpty?
                                                 ├─[Yes]→ Loop Over Items ─┬─► Send Email → Update Status → Call LogSQLServer → Loop
                                                 │                         └─► (done)
                                                 └─[No]→ (end)
@@ -403,7 +496,7 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 
 ---
 
-## 🔷 Audit Logging Workflow (LogSQLServer v1.0.1) - Node Details
+##  Audit Logging Workflow (LogSQLServer v1.0.1) - Node Details
 
 | Node Name | Type | Purpose |
 |-----------|------|---------|
@@ -417,7 +510,7 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 | Parameter | Description |
 |-----------|-------------|
 | `table_name` | Database table name (e.g., "[YourDatabase].[dbo].[ticket]") |
-| `action_type` | Action performed (INSERT, UPDATE, UNSEND, UNASSIGNED) |
+| `action_type` | Action performed (INSERT, UPDATE, UNSEND, CLOSE, UNCLOSE) |
 | `value` | Description of the change |
 | `message_id` | Ticket message ID |
 | `datetime` | Timestamp of the action |
@@ -431,7 +524,7 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 |--------|------|-------------|
 | table_name | VARCHAR | Name of the table where action occurred |
 | table_row_id | VARCHAR | ID of the affected row |
-| action_type | VARCHAR | Type of action (INSERT, UPDATE, UNSEND, UNASSIGNED) |
+| action_type | VARCHAR | Type of action (INSERT, UPDATE, UNSEND, CLOSE, UNCLOSE) |
 | value | NVARCHAR | Description of the change |
 | created_date | DATETIME | Timestamp when log entry was created |
 | created_by | VARCHAR | User/system who performed the action |
@@ -439,7 +532,7 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 
 ---
 
-## 🔷 AI Classification Details
+##  AI Classification Details
 
 ### Core Agent Output Schema
 
@@ -492,28 +585,31 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 
 ---
 
-## 🔷 Ticket Status Flow
+##  Ticket Status Flow
 
 ```
 ┌──────────┐                                    ┌──────────┐
 │ pending  │ ───── If Reply by IT Staff ──────► │ assigned │
 └──────────┘       (via Auto Assign 1.2)        └──────────┘
-     │
-     ├──── If Unsend Event ────► ┌────────┐
-     │     (in Main Workflow)    │ unsent │
-     │                           └────────┘
+     │                                               │
+     ├──── If Unsend Event ────► ┌────────┐          │ If contains "การแก้ไขปัญหา"
+     │     (in Main Workflow)    │ unsent │          │ (via Auto Close Ticket 1.0)
+     │                           └────────┘          ▼
+     │                                              ┌────────┐
+     │                                              │ closed │
+     │                                              └────────┘
      │
      │ Schedule (12:00, 18:00)
-     │ No reply received
+     │ No close received
      ▼
 ┌─────────────┐
-│ unassigned  │
+│  Unclose    │
 └─────────────┘
 ```
 
 ---
 
-## 🔷 Data Tables (n8n Internal)
+##  Data Tables (n8n Internal)
 
 | Table ID | Name | Purpose |
 |----------|------|---------|
@@ -525,14 +621,14 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 
 ---
 
-## 🔷 Database Structure (Microsoft SQL Server)
+##  Database Structure (Microsoft SQL Server)
 
 ### Table: [YourDatabase].[dbo].[ticket]
 
 | Column | Type | Description |
 |--------|------|-------------|
 | message_id | VARCHAR | LINE message ID (primary key) |
-| status | VARCHAR | pending / assigned / unassigned / unsent |
+| status | VARCHAR | pending / assigned / Unclose / unsent / closed |
 | assigned_to | VARCHAR | IT staff name who took the ticket |
 | assigned_date | DATETIME | Timestamp when assigned/sent |
 | intent | VARCHAR | INC/SR classification |
@@ -552,10 +648,13 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 | updated_date | DATETIME | Record update timestamp |
 | updated_by | VARCHAR | Who updated the record |
 | sub_category | VARCHAR | Sub-category |
+| **close_cause** | NVARCHAR | **NEW**: Problem cause/symptom |
+| **close_reason** | NVARCHAR | **NEW**: Problem resolution |
+| **close_time_minute** | INT | **NEW**: Time from assigned to closed (minutes) |
 
 ---
 
-## 🔷 External Integrations
+##  External Integrations
 
 ### LINE Messaging API
 - **Auth**: Bearer Token (credential ID: `taEN43RaPXagQMcX`)
@@ -577,8 +676,8 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 - **Public URL**: `https://e-learning.example.com//[Company Name]/{filename}.{extension}`
 
 ### SMTP (DavMail)
-- **From**: `helpdesk.t@example.com`
-- **To**: `helpdesk.t@example.com`
+- **From**: `helpdesk@example.com`
+- **To**: `helpdesk@example.com`
 - **Credential ID**: `o2kgNvpcg8y3t93j`
 
 ### Microsoft SQL Server
@@ -595,7 +694,7 @@ Schedule Trigger → Get Pending Tickets → If notEmpty?
 
 ---
 
-## 🔷 Key Expressions
+##  Key Expressions
 
 ### Text Cleaning
 ```javascript
@@ -622,6 +721,18 @@ $('Webhook Line').first().json.body.events[0].message.text
     .match(/ปัญหา\s*\s*([\s\S]*)/)?.[1].trim()
 ```
 
+### Extract Close Cause (NEW)
+```javascript
+// Extract problem cause/symptom for closing tickets
+clean_text.match(/(?:อาการ|ปัญหาอาการ)[\s=:]*([\s\S]*?)(?=\s*การแก้ไขปัญหา)/)?.[1].trim()
+```
+
+### Extract Close Reason (NEW)
+```javascript
+// Extract resolution for closing tickets
+clean_text.match(/การแก้ไขปัญหา[\s=:]*([\s\S]*?)(?=\s*@|$)/)?.[1].trim()
+```
+
 ### Timestamp Formatting
 ```javascript
 // Format timestamp to ISO string
@@ -635,10 +746,22 @@ DateTime.fromMillis($('Webhook Line').first().json.body.events[0].timestamp)
 $('SET - Extract Sender IDs').item.json.quotedMessageId !== ""
 ```
 
+### Check for Close Pattern (NEW)
+```javascript
+// Check if message contains close pattern
+clean_text.includes("การแก้ไขปัญหา")
+```
+
 ### Email Body with Assignment
 ```javascript
 // Send email with #assign command
 $('Lookup Ticket').item.json.email_body + "\n#assign " + $json.email_spiceworks
+```
+
+### Email Body with Close (NEW)
+```javascript
+// Send email with #close command
+emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cause + "\n#set การแก้ไขปัญหา=" + reason + "\n#close"
 ```
 
 ### Check for Unsend Event
@@ -649,9 +772,9 @@ $('Webhook Line').item.json.body.events[0].unsend.messageId
 
 ---
 
-## 🔷 Disabled Nodes
+##  Disabled Nodes
 
-### Auto Ticket 1.7.1
+### Auto Ticket 1.7
 | Node Name | Reason |
 |-----------|--------|
 | `Wait` (unsend path) | Disabled - direct SQL update is used instead |
@@ -667,9 +790,14 @@ $('Webhook Line').item.json.body.events[0].unsend.messageId
 | `Get row(s) in sheet` | Test data retrieval |
 | `Webhook Line1/2` | Alternative webhook endpoints (disabled) |
 
+### Auto Assign 1.2
+| Node Name | Reason |
+|-----------|--------|
+| `Send email To DavMail` | **DISABLED** - Email sending is disabled |
+
 ---
 
-## 🔷 Error Handling
+##  Error Handling
 
 | Node | Setting | Value |
 |------|---------|-------|
@@ -682,10 +810,13 @@ $('Webhook Line').item.json.body.events[0].unsend.messageId
 | `FInd Branch` | retryOnFail | true (5000ms) |
 | `Find Sub Category` | retryOnFail | true (5000ms) |
 | `Update Ticket Status` (Auto Assign) | retryOnFail | true (3000ms, 5 tries) |
+| `Send email To DavMail` (Auto Close) | retryOnFail | true (5000ms, 5 tries) |
+| `Call Auto Assign` | retryOnFail | true (5000ms, 5 tries) |
+| `Call Auto Close Ticket` | retryOnFail | true (5000ms, 5 tries) |
 
 ---
 
-## 📝 Notes for Modifications
+##  Notes for Modifications
 
 1. **Adding New Categories**: Update the `Category` data table and modify the mapping in `Set Command Ticket` (in CoreAI sub-workflow)
 2. **Adding New Branches**: Update the `Branch Company` or `Branch Franchise` data tables
@@ -693,13 +824,14 @@ $('Webhook Line').item.json.body.events[0].unsend.messageId
 4. **Changing Email Recipients**: Modify `toEmail` in the `Send email To DavMail` node
 5. **Adding New Event Handlers**: Add new conditions to the `Switch` node in the main workflow
 6. **Modifying Auto-Assign Logic**: Edit nodes in the Auto Assign 1.2 workflow
-7. **Changing Schedule Time**: Modify the `Schedule Trigger` node in the Schedule Ticket Unassign workflow
-8. **Adjusting Wait Time**: Modify the `Wait` node in Auto Assign 1.2 (currently 1 minute)
-9. **Database Changes**: Modify SQL queries in `Microsoft SQL` nodes when database schema changes
+7. **Modifying Auto-Close Logic**: Edit nodes in the Auto Close Ticket 1.0 workflow
+8. **Changing Schedule Time**: Modify the `Schedule Trigger` node in the Schedule Ticket Unclose workflow
+9. **Adjusting Wait Time**: Modify the `Wait` node in Auto Assign 1.2 (currently 1 minute)
+10. **Database Changes**: Modify SQL queries in `Microsoft SQL` nodes when database schema changes
 
 ---
 
-## 🔄 Version History
+##  Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
@@ -709,19 +841,21 @@ $('Webhook Line').item.json.body.events[0].unsend.messageId
 | 1.6.2 | 2026-01-19 | **Auto Assign Separated**: Auto-Assign logic moved to separate sub-workflow (Auto Assign 1.1), **New Wait Node**: 1-minute delay in Auto Assign before ticket lookup, **Unsend Handling**: Added detection and handling of unsend events (status = "unsent"), **Ticket Detection Enhanced**: Added `แผนก` as alternative to `สาขา`, **Loop Processing**: Schedule Unassign uses Loop Over Items for batch processing, **CoreAI Updated**: Version 1.1 with enhanced logging, **All Workflows Updated**: CoreAI 1.0→1.1, Schedule Unassign 1.0→1.1, New Auto Assign 1.1 |
 | 1.7 | 2026-02-04 | **LLM Model Updated**: Changed from mimo-v2-flash to deepseek/deepseek-chat-v3.1 in CoreAI 1.3, **Database Migration**: Migrated from Google Sheets to Microsoft SQL Server for ticket storage, **Auto Assign Enhanced**: Version 1.2 adds LogSQLServer sub-workflow call for audit logging, **SQL Queries**: All ticket operations now use Microsoft SQL Server, **Updated Workflows**: Auto Ticket 1.6.2→1.7, CoreAI 1.1→1.3, Auto Assign 1.1→1.2, **Status Updated**: Changed "sent" to "assigned", "sent_unassigned" to "unassigned" |
 | 1.7.1 | 2026-02-09 | **Schedule Unassign Updated**: Version 1.2 adds LogSQLServer sub-workflow call for audit logging, **Unsend Enhanced**: Added LogSQLServer call for unsend event logging, **CoreAI Enhanced**: Added LogSQLServer call for ticket creation logging, **Full Audit Trail**: All ticket operations now logged via LogSQLServer v1.0.1, **Updated Workflows**: Schedule Unassign 1.1→1.2, New LogSQLServer v1.0.1, Auto Ticket 1.7→1.7.1 |
+| 1.7 | 2026-02-12 | **Auto Close Ticket Added**: New Auto Close Ticket 1.0 sub-workflow for handling ticket closure, **Close Detection**: Detects "การแก้ไขปัญหา" pattern in IT staff replies, **Close Data**: Extracts `close_cause`, `close_reason`, calculates `close_time_minute`, **Schedule Updated**: Schedule Ticket Unclose 1.2 now processes "assigned" tickets (renamed from Unassign), **New Status**: Added "closed" and "Unclose" statuses, **Email Disabled**: Auto Assign email sending disabled, **Workflow Chain**: Auto Assign → Auto Close Ticket for processing replies, **Updated Workflows**: Auto Ticket 1.7.1→1.7, New Auto Close Ticket 1.0, Schedule Ticket Unassign 1.2→Schedule Ticket Unclose 1.2 |
 
 ---
 
-## 🔷 Workflow IDs
+##  Workflow IDs
 
 | Workflow | ID | Version |
 |----------|-----|---------|
-| Auto Ticket 1.7.1 | `yjqa7NBnaFqtPjBd` | 1.7.1 |
+| Auto Ticket 1.7 | `yjqa7NBnaFqtPjBd` | 1.7 |
 | Auto Ticket CoreAI 1.3 | `vnzG9J1ipCdgk5Q4` | 1.3 |
 | Auto Assign 1.2 | `4tIlVjstYxU09G6a` | 1.2 |
-| Schedule Ticket Unassign 1.2 | `UBCa3WsUnv88uG-4Syw6l` | 1.2 |
+| **Auto Close Ticket 1.0** | `USgdNP1aNHh1QJg3` | 1.0 (NEW) |
+| Schedule Ticket Unclose 1.2 | `UBCa3WsUnv88uG-4Syw6l` | 1.2 |
 | LogSQLServer v1.0.1 | `q3ybqMcKYHUTu4qg` | 1.0.1 |
 
 ---
 
-*Generated: 2026-02-10*
+*Generated: 2026-02-12*
