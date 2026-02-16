@@ -1,6 +1,6 @@
 # 🎫 Auto Ticket System - AI-Powered IT Helpdesk Automation
 
-[![n8n](https://img.shields.io/badge/n8n-1.x-FF6D5A?logo=n8n&logoColor=white)](https://n8n.io)
+[![n8n](https://img.shields.io/badge/n8n-1.7-FF6D5A?logo=n8n&logoColor=white)](https://n8n.io)
 [![LINE](https://img.shields.io/badge/LINE-Messaging%20API-00C300?logo=line&logoColor=white)](https://developers.line.biz/)
 [![OpenRouter](https://img.shields.io/badge/AI-OpenRouter%20LLM-6366F1)](https://openrouter.ai/)
 [![Microsoft SQL](https://img.shields.io/badge/Microsoft-SQL%20Server-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/en-us/sql-server/)
@@ -20,8 +20,9 @@ This project demonstrates a **production-ready IT helpdesk automation system** t
 2. 🤖 **Classify** - Uses AI (LLM) to categorize tickets by type, branch, and priority
 3. 📧 **Route** - Sends tickets to helpdesk system via email
 4. 👤 **Assign** - Auto-assigns tickets when IT staff replies to messages
-5. ⏰ **Remind** - Sends unassigned tickets at scheduled times (12:00 & 18:00)
-6. 📊 **Audit** - Logs all ticket operations to SQL Server for traceability
+5. 🔒 **Close** - Auto-closes tickets when IT staff includes resolution details
+6. ⏰ **Remind** - Sends unclosed tickets at scheduled times (18:00 daily)
+7. 📊 **Audit** - Logs all ticket operations to SQL Server for traceability
 
 ### 🎯 Business Impact
 - **80% faster** ticket creation (from manual 5+ mins to automatic 30 secs)
@@ -56,34 +57,41 @@ flowchart TB
     subgraph Assign["👤 Auto Assign 1.2"]
         J[Wait 1 min]
         K[Lookup Ticket]
-        L[Send Assignment Email]
+        L[Update Assigned]
+    end
+
+    subgraph Close["🔒 Auto Close 1.0"]
+        M{Close Pattern?}
+        N[Lookup Assigned]
+        O[Update Closed]
     end
 
     subgraph Schedule["⏰ Schedule 1.2"]
-        M[12:00 & 18:00 Trigger]
-        N[Send Pending Tickets]
+        P[18:00 Trigger]
+        Q[Send Unclosed Tickets]
     end
 
     subgraph Audit["📊 LogSQLServer 1.0.1"]
-        O[Audit Logger]
+        R[Audit Logger]
     end
 
     subgraph Output["📊 Output"]
-        P[(Microsoft SQL)]
-        Q[📧 Helpdesk Email]
+        S[(Microsoft SQL)]
+        T[📧 Helpdesk Email]
     end
 
     A --> B --> C
     C -->|Text/Image| D
-    C -->|Unsend| F --> O
+    C -->|Unsend| F --> R
     D -->|IT Staff Reply| Assign
     D -->|User Message| E
-    E -->|Ticket Found| AI --> G --> H --> I --> Q --> P --> O
-    E -->|No Ticket| P
-    J --> K --> L --> Q
-    M --> N --> Q
-    Assign --> O
-    Schedule --> O
+    E -->|Ticket Found| AI --> G --> H --> I --> T --> S --> R
+    E -->|No Ticket| S
+    J --> K --> L --> Close
+    M -->|การแก้ไขปัญหา| N --> O --> T --> S --> R
+    P --> Q --> T --> S --> R
+    Assign --> R
+    Schedule --> R
 ```
 
 ---
@@ -96,7 +104,8 @@ flowchart TB
 | 📱 **LINE Integration** | Receives messages from LINE groups in real-time | LINE Messaging API |
 | 🏢 **Branch Detection** | Identifies 100+ branches from natural language | AI + Data Table Matching |
 | 👤 **Auto-Assignment** | Assigns tickets when IT staff replies to messages | Quote Reply Detection |
-| ⏰ **Scheduled Reminders** | Sends pending tickets at 12:00 and 18:00 daily | n8n Schedule Trigger |
+| 🔒 **Auto-Close** | Closes tickets when IT staff includes resolution details | Pattern Detection (การแก้ไขปัญหา) |
+| ⏰ **Scheduled Reminders** | Sends unclosed tickets at 18:00 daily | n8n Schedule Trigger |
 | 🔄 **Unsend Handling** | Detects when users unsend messages and marks tickets accordingly | Event Detection + SQL Update |
 | 📸 **Media Support** | Handles images/videos with FTP upload and hyperlinks | FTP + Image Upload |
 | 📊 **Full Logging** | Logs all activities to Microsoft SQL Server for analytics | Microsoft SQL Server |
@@ -115,10 +124,11 @@ flowchart TB
 ├── 📝 .env.sanitizer.example              # Sanitizer configuration template
 │
 ├── 📁 workflows/                          # n8n workflow JSON files
-│   ├── Auto Ticket.json                  # Main workflow (v1.7.1)
+│   ├── Auto Ticket.json                  # Main workflow (v1.7)
 │   ├── Auto Ticket CoreAI.json           # AI classification sub-workflow (v1.3)
 │   ├── Auto Assign.json                  # Auto-assignment sub-workflow (v1.2)
-│   ├── Schedule Ticket Unassign.json     # Scheduled reminder workflow (v1.2)
+│   ├── Auto Close Ticket.json            # Auto-close sub-workflow (v1.0)
+│   ├── Schedule Ticket Unclose.json      # Scheduled reminder workflow (v1.2)
 │   └── LogSQLServer.json                 # Audit logging sub-workflow (v1.0.1)
 │
 └── 📁 screenshots/                        # Workflow screenshots
@@ -194,27 +204,48 @@ User posts ticket → IT staff replies (quote) → System detects reply
 
 ---
 
-### 4️⃣ Schedule Ticket Unassign 1.2 (Scheduled Reminder)
+### 4️⃣ Auto Close Ticket 1.0 (Auto-Close)
+Automatically closes tickets when IT staff replies with resolution details.
+
+```
+IT staff replies (quote) → System detects "การแก้ไขปัญหา" pattern
+                                                      ↓
+                            Lookup assigned ticket by quotedMessageId
+                                                      ↓
+                            Extract close_cause and close_reason
+                                                      ↓
+                            Send email with #close command
+                                                      ↓
+                            Update ticket status to "closed"
+                                                      ↓
+                            Call LogSQLServer for audit logging
+```
+
+📎 **Workflow:** [`workflows/Auto Close Ticket.json`](./workflows/Auto%20Close%20Ticket.json)
+
+---
+
+### 5️⃣ Schedule Ticket Unclose 1.2 (Scheduled Reminder)
 Sends pending tickets that haven't been claimed by IT staff.
 
 | Schedule | Action |
 |----------|--------|
-| 12:00 (noon) | Send all pending tickets |
-| 18:00 (evening) | Send remaining pending tickets |
+| 18:00 (evening) | Send all unclosed tickets |
 
-📎 **Workflow:** [`workflows/Schedule Ticket Unassign.json`](./workflows/Schedule%20Ticket%20Unassign.json)
+📎 **Workflow:** [`workflows/Schedule Ticket Unclose.json`](./workflows/Schedule%20Ticket%20Unclose.json)
 
 ---
 
-### 5️⃣ LogSQLServer 1.0.1 (Audit Logging)
+### 6️⃣ LogSQLServer 1.0.1 (Audit Logging)
 Centralized audit logging for all ticket operations across all workflows.
 
 | Action Type | Description | Calling Workflows |
 |-------------|-------------|-------------------|
 | INSERT | New ticket created | Auto Ticket CoreAI 1.3 |
 | UPDATE | Ticket assigned | Auto Assign 1.2 |
+| CLOSE | Ticket closed | Auto Close Ticket 1.0 |
 | UNSEND | Message unsent by user | Auto Ticket 1.7 |
-| UNASSIGNED | Ticket sent unassigned | Schedule Ticket Unassign 1.2 |
+| UNCLOSE | Ticket sent unclosed | Schedule Ticket Unclose 1.2 |
 
 📎 **Workflow:** [`workflows/LogSQLServer.json`](./workflows/LogSQLServer.json)
 
@@ -226,10 +257,11 @@ Centralized audit logging for all ticket operations across all workflows.
 stateDiagram-v2
     [*] --> pending : Ticket Created
     pending --> assigned : IT Staff Reply
-    pending --> unassigned : Schedule Reminder
+    pending --> Unclose : Schedule Reminder (No Close)
     pending --> unsent : User Unsends Message
-    assigned --> [*] : Ticket Closed
-    unassigned --> [*] : Ticket Closed
+    assigned --> closed : IT Staff Closes (การแก้ไขปัญหา)
+    Unclose --> [*] : Ticket Closed
+    closed --> [*] : End
     unsent --> [*] : Cancelled
 ```
 
@@ -276,7 +308,8 @@ cd n8n-auto-ticket-system
 n8n import:workflow --input=workflows/Auto\ Ticket.json
 n8n import:workflow --input=workflows/Auto\ Ticket\ CoreAI.json
 n8n import:workflow --input=workflows/Auto\ Assign.json
-n8n import:workflow --input=workflows/Schedule\ Ticket\ Unassign.json
+n8n import:workflow --input=workflows/Auto\ Close\ Ticket.json
+n8n import:workflow --input=workflows/Schedule\ Ticket\ Unclose.json
 n8n import:workflow --input=workflows/LogSQLServer.json
 ```
 
@@ -319,7 +352,10 @@ CREATE TABLE [YourDatabase].[dbo].[ticket] (
     created_by VARCHAR(50),
     updated_date DATETIME,
     updated_by VARCHAR(50),
-    sub_category VARCHAR(100)
+    sub_category VARCHAR(100),
+    close_cause NVARCHAR(MAX),
+    close_reason NVARCHAR(MAX),
+    close_time_minute INT
 );
 ```
 
@@ -453,6 +489,20 @@ PLACEHOLDER_COMPANY_BRANCH=Branch Office
 ---
 
 ## 📝 Changelog
+
+### v1.7.2 (2026-02-16)
+- 🔧 **Enhanced:** Schedule Ticket Unclose 1.2 - Removed 12:00 trigger (now only 18:00)
+- 🔧 **Enhanced:** Auto Close Ticket 1.0 - Fixed SQL query to use column directly instead of template literal
+
+### v1.7 (2026-02-12)
+- ✨ **New:** Auto Close Ticket 1.0 sub-workflow for handling ticket closure
+- ✨ **New:** Close detection with "การแก้ไขปัญหา" pattern
+- ✨ **New:** Extract `close_cause`, `close_reason`, and calculate `close_time_minute`
+- ✨ **New:** Workflow chaining: Auto Assign → Auto Close Ticket
+- 🔧 **Enhanced:** Schedule Ticket Unclose 1.2 now processes "assigned" tickets
+- 🔧 **Enhanced:** Auto Assign email sending disabled
+- 📝 **Updated:** New ticket statuses: "closed" and "Unclose"
+- 📝 **Updated:** Renamed Schedule Ticket Unassign → Schedule Ticket Unclose
 
 ### v1.7.1 (2026-02-09)
 - ✨ **New:** Schedule Unassign 1.2 adds LogSQLServer call for audit logging

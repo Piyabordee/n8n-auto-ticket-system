@@ -6,9 +6,6 @@
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 12
-            },
-            {
               "triggerAtHour": 18
             }
           ]
@@ -362,7 +359,7 @@
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "2619d57a-8eef-4cc7-80af-3d07e682d45a",
+  "versionId": "a4a05d8d-26ea-4bcf-abb9-35a4c72fa1b5",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c0ee9619a3de3f52e872fba900c2709ab5e62b555937f4f80d0077ae523c5c4c"
