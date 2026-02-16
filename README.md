@@ -10,6 +10,8 @@
 
 ![Workflow Overview](./screenshots/main-workflow.png)
 
+*📸 View all workflow screenshots at [SCREENSHOTS.md](./SCREENSHOTS.md)*
+
 ---
 
 ## 📌 Overview
@@ -118,8 +120,9 @@ flowchart TB
 ```
 📦 n8n-auto-ticket-system/
 ├── 📄 README.md                           # This file
-├── 📄 LICENSE                             # MIT License
+├── 📄 SCREENSHOTS.md                      # Workflow screenshots & diagrams
 ├── 📄 AGENTS.md                           # Workflow context documentation
+├── 📄 LICENSE                             # MIT License
 ├── 🐍 sanitize.py                         # Data sanitizer tool
 ├── 📝 .env.sanitizer.example              # Sanitizer configuration template
 │
@@ -490,11 +493,11 @@ PLACEHOLDER_COMPANY_BRANCH=Branch Office
 
 ## 📝 Changelog
 
-### v1.7.2 (2026-02-16)
+### v1.7.3 (2026-02-16)
 - 🔧 **Enhanced:** Schedule Ticket Unclose 1.2 - Removed 12:00 trigger (now only 18:00)
 - 🔧 **Enhanced:** Auto Close Ticket 1.0 - Fixed SQL query to use column directly instead of template literal
 
-### v1.7 (2026-02-12)
+### v1.7.2 (2026-02-12)
 - ✨ **New:** Auto Close Ticket 1.0 sub-workflow for handling ticket closure
 - ✨ **New:** Close detection with "การแก้ไขปัญหา" pattern
 - ✨ **New:** Extract `close_cause`, `close_reason`, and calculate `close_time_minute`
