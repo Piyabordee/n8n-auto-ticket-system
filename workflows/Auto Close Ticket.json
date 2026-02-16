@@ -28,10 +28,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -480,
-        -64
+        320,
+        -240
       ],
-      "id": "45365134-2bba-414b-8dec-fe9bbcbaf9eb",
+      "id": "a561e0ee-2885-4af1-a075-53eeef1fc706",
       "name": "If"
     },
     {
@@ -42,10 +42,10 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        -272,
-        -160
+        528,
+        -336
       ],
-      "id": "236b2d16-1bc3-4265-8ccf-02fac3d08782",
+      "id": "f1c29437-4fb3-4724-bd74-7554dce0dabf",
       "name": "Microsoft SQL",
       "credentials": {
         "microsoftSql": {
@@ -82,10 +82,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -64,
-        -160
+        736,
+        -336
       ],
-      "id": "6ddaa216-7712-4038-90e6-8396d6195a31",
+      "id": "4abb890a-63e6-46b9-896c-681f19987dd4",
       "name": "If notEmpty"
     },
     {
@@ -103,10 +103,10 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        256,
-        -176
+        1056,
+        -352
       ],
-      "id": "bc189956-5a6b-4fae-860f-5e6039de1b2e",
+      "id": "3b2db305-addb-4a78-a8b7-13dd5b39e699",
       "name": "Send email To DavMail",
       "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
       "retryOnFail": true,
@@ -142,25 +142,25 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        96,
-        -176
+        896,
+        -352
       ],
-      "id": "44c6b448-9801-41aa-b815-51ce68aad6ae",
+      "id": "00158425-0563-401b-ab2c-11b4e351436c",
       "name": "Match IT Team",
       "alwaysOutputData": true
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'closed',\n    close_cause = N'{{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}',\n    close_reason = N'{{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').first().json.fromUser }}',\n    close_time_minute = DATEDIFF(minute, '{{ $('Microsoft SQL').item.json.assigned_date }}', GETDATE())\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
+        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'closed',\n    close_cause = N'{{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}',\n    close_reason = N'{{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').first().json.fromUser }}',\n    close_time_minute = DATEDIFF(MINUTE, assigned_date, GETDATE())\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
       },
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        448,
-        -176
+        1248,
+        -352
       ],
-      "id": "fad53733-419b-4c43-a42c-dfdccf5314a2",
+      "id": "84d10e1f-b497-467e-8a6d-08c20bfb42bf",
       "name": "Update Ticket Status",
       "credentials": {
         "microsoftSql": {
@@ -260,11 +260,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        640,
-        -176
+        1440,
+        -352
       ],
       "name": "Call LogSQLServer",
-      "id": "fdeda263-2c8f-450d-8123-cf7cc489f265"
+      "id": "2fc0ff87-8e2e-4eca-aa00-dbb70e80c18f"
     },
     {
       "parameters": {
@@ -285,13 +285,13 @@
           ]
         }
       },
-      "id": "f611bc0c-0932-4207-bbd7-fa599dd77796",
+      "id": "ce9566db-fb04-48f7-b736-9e3282eac2f4",
       "typeVersion": 1.1,
       "name": "Start",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "position": [
-        -688,
-        -64
+        112,
+        -240
       ]
     }
   ],
@@ -302,6 +302,17 @@
         [
           {
             "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "If notEmpty",
             "type": "main",
             "index": 0
           }
@@ -352,17 +363,6 @@
         ]
       ]
     },
-    "Microsoft SQL": {
-      "main": [
-        [
-          {
-            "node": "If notEmpty",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Start": {
       "main": [
         [
@@ -384,7 +384,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "binaryMode": "separate"
   },
-  "versionId": "e993c6f4-019c-4eae-b072-f1b1a1ccade0",
+  "versionId": "b7bf7e59-4db0-4c63-a2e1-ba5b64963393",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"

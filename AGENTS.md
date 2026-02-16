@@ -46,7 +46,7 @@ This workflow system automates IT helpdesk ticketing process with following arch
 5. Calls LogSQLServer sub-workflow for audit logging
 
 ### Schedule Workflow (Schedule Ticket Unclose 1.2)
-1. Runs at 12:00 and 18:00 daily
+1. Runs at 18:00 daily
 2. **Loop Over Items**: Processes assigned tickets one by one
 3. Sends assigned tickets that haven't been closed
 4. Updates ticket status to "Unclose"
@@ -163,7 +163,7 @@ This workflow system automates IT helpdesk ticketing process with following arch
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                 Schedule Ticket Unclose 1.2 (Scheduled)                     │
 │                                                                             │
-│  Schedule (12:00, 18:00) ──► Get Assigned Tickets ──► If notEmpty ──►      │
+│  Schedule (18:00) ──► Get Assigned Tickets ──► If notEmpty ──►      │
 │                                                              │              │
 │                                                       Loop Over Items       │
 │                                                              │              │
@@ -223,7 +223,7 @@ This workflow system automates IT helpdesk ticketing process with following arch
 |----------|-------|
 | **Type** | Schedule Trigger |
 | **Node Name** | `Schedule Trigger` |
-| **Schedule** | Daily at 12:00 and 18:00 |
+| **Schedule** | Daily at 18:00 |
 | **Timezone** | Asia/Bangkok |
 
 ### LogSQLServer v1.0.1
@@ -478,7 +478,7 @@ The email sent includes:
 
 | Node Name | Type | Purpose |
 |-----------|------|---------|
-| `Schedule Trigger` | Schedule | Triggers at 12:00 and 18:00 daily |
+| `Schedule Trigger` | Schedule | Triggers at 18:00 daily |
 | `Get Pending Tickets` | Microsoft SQL | Gets rows where `status` = "assigned" |
 | `If notEmpty` | If | Checks if any assigned tickets exist |
 | `Loop Over Items` | Split In Batches | Processes tickets one by one (batch size: 1) |
@@ -599,7 +599,7 @@ Schedule Trigger → Get Assigned Tickets → If notEmpty?
      │                                              │ closed │
      │                                              └────────┘
      │
-     │ Schedule (12:00, 18:00)
+     │ Schedule (18:00)
      │ No close received
      ▼
 ┌─────────────┐
@@ -835,6 +835,7 @@ $('Webhook Line').item.json.body.events[0].unsend.messageId
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.7.2 | 2026-02-16 | **Schedule Updated**: Schedule Ticket Unclose 1.2 removed 12:00 trigger (now only 18:00), **Auto Close Fixed**: SQL query now uses column directly instead of template literal for `close_time_minute` calculation |
 | 1.5 | 2025-12-23 | Initial documentation |
 | 1.5.1 | 2025-12-29 | Changed LLM from Groq to OpenRouter (mimo-v2-flash), Email changed from Zimbra to DavMail, Disabled IT Staff filtering, Simplified ticket detection |
 | 1.6 | 2026-01-05 | **Architecture Change**: Split into Main + Sub-Workflow (CoreAI 1.0), **New Feature**: Auto-Assign via LINE Reply, **New Workflow**: Schedule Ticket Unassign for pending tickets, Added ticket status flow (pending → assigned / unassigned), Added `quotedMessageId` detection for reply tracking |
