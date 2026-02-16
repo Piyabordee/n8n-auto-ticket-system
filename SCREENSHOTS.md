@@ -3,19 +3,20 @@
 n8n workflow screenshots and architecture diagrams for the Auto Ticket System.
 
 > **Last Updated**: 2026-02-16
-> **System Version**: v1.7.3
+
+> 📋 **See [README.md](./README.md#-workflows-overview) for workflow versions and details**
 
 ## Available Screenshots
 
 ### Workflow Diagrams
 
-| Screenshot | Workflow | Version | Description |
-|------------|----------|---------|-------------|
-| ![main-workflow](screenshots/main-workflow.png) | Auto Ticket 1.7 | 1.7 | Main workflow - LINE webhook processing |
-| ![ai-classification](screenshots/ai-classification.png) | Auto Ticket CoreAI 1.3 | 1.3 | AI classification sub-workflow |
-| ![auto-assign](screenshots/auto-assign.png) | Auto Assign 1.2 | 1.2 | IT staff reply assignment sub-workflow |
-| ![schedule](screenshots/schedule.png) | Schedule Ticket Unclose 1.2 | 1.2 | Scheduled unclosed ticket processing |
-| ![log-sql-server](screenshots/log-sql-server.png) | LogSQLServer v1.0.1 | 1.0.1 | Centralized audit logging workflow |
+| Screenshot | Workflow | Description |
+|------------|----------|-------------|
+| ![main-workflow](screenshots/main-workflow.png) | Auto Ticket | Main workflow - LINE webhook processing |
+| ![ai-classification](screenshots/ai-classification.png) | Auto Ticket CoreAI | AI classification sub-workflow |
+| ![auto-assign](screenshots/auto-assign.png) | Auto Assign | IT staff reply assignment sub-workflow |
+| ![schedule](screenshots/schedule.png) | Schedule Ticket Unclose | Scheduled unclosed ticket processing |
+| ![log-sql-server](screenshots/log-sql-server.png) | LogSQLServer | Centralized audit logging workflow |
 
 ### Architecture Diagram
 
@@ -25,13 +26,13 @@ n8n workflow screenshots and architecture diagrams for the Auto Ticket System.
 
 ## Workflow File References
 
-| Screenshot | Workflow File | Version | Status |
-|------------|---------------|---------|--------|
-| `main-workflow.png` | [workflows/Auto Ticket.json](./workflows/Auto%20Ticket.json) | 1.7 | ✅ Active |
-| `ai-classification.png` | [workflows/Auto Ticket CoreAI.json](./workflows/Auto%20Ticket%20CoreAI.json) | 1.3 | ✅ Active |
-| `auto-assign.png` | [workflows/Auto Assign.json](./workflows/Auto%20Assign.json) | 1.2 | ✅ Active |
-| `schedule.png` | [workflows/Schedule Ticket Unclose.json](./workflows/Schedule%20Ticket%20Unclose.json) | 1.2 | ✅ Active |
-| `log-sql-server.png` | [workflows/LogSQLServer.json](./workflows/LogSQLServer.json) | 1.0.1 | ✅ Active |
+| Screenshot | Workflow File | Status |
+|------------|---------------|--------|
+| `main-workflow.png` | [workflows/Auto Ticket.json](./workflows/Auto%20Ticket.json) | ✅ Active |
+| `ai-classification.png` | [workflows/Auto Ticket CoreAI.json](./workflows/Auto%20Ticket%20CoreAI.json) | ✅ Active |
+| `auto-assign.png` | [workflows/Auto Assign.json](./workflows/Auto%20Assign.json) | ✅ Active |
+| `schedule.png` | [workflows/Schedule Ticket Unclose.json](./workflows/Schedule%20Ticket%20Unclose.json) | ✅ Active |
+| `log-sql-server.png` | [workflows/LogSQLServer.json](./workflows/LogSQLServer.json) | ✅ Active |
 
 ## How to Export Screenshots from n8n
 
@@ -54,12 +55,12 @@ n8n workflow screenshots and architecture diagrams for the Auto Ticket System.
 The [architecture.png](screenshots/architecture.png) shows:
 
 - **LINE Messaging API** - Webhook source
-- **Auto Ticket 1.7** - Main workflow handling all events
-- **Auto Ticket CoreAI 1.3** - AI classification with OpenRouter
-- **Auto Assign 1.2** - IT staff reply assignment
-- **Auto Close Ticket 1.0** - Ticket closure with resolution details
-- **Schedule Ticket Unclose 1.2** - Daily unclosed ticket processing (18:00)
-- **LogSQLServer v1.0.1** - Centralized audit logging
+- **Auto Ticket** - Main workflow handling all events
+- **Auto Ticket CoreAI** - AI classification with OpenRouter
+- **Auto Assign** - IT staff reply assignment
+- **Auto Close Ticket** - Ticket closure with resolution details
+- **Schedule Ticket Unclose** - Daily unclosed ticket processing (18:00)
+- **LogSQLServer** - Centralized audit logging
 - **Microsoft SQL Server** - Ticket and Log storage
 - **External Services** - FTP, DavMail SMTP, OpenRouter LLM
 
@@ -78,7 +79,7 @@ For detailed workflow documentation, see [AGENTS.md](./AGENTS.md)
 
 ### 2026-02-16
 - ✅ Moved from screenshots/README.md to root SCREENSHOTS.md
-- ✅ Updated system version to v1.7.3
+- ✅ Removed workflow versions (see README.md for current versions)
 - ✅ Updated all image paths for new location
 
 ### 2026-02-09
