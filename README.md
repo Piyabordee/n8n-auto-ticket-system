@@ -1,6 +1,6 @@
 # 🎫 Auto Ticket System - AI-Powered IT Helpdesk Automation
 
-[![n8n](https://img.shields.io/badge/n8n-1.7-FF6D5A?logo=n8n&logoColor=white)](https://n8n.io)
+[![n8n](https://img.shields.io/badge/n8n-1.7.4-FF6D5A?logo=n8n&logoColor=white)](https://n8n.io)
 [![LINE](https://img.shields.io/badge/LINE-Messaging%20API-00C300?logo=line&logoColor=white)](https://developers.line.biz/)
 [![OpenRouter](https://img.shields.io/badge/AI-OpenRouter%20LLM-6366F1)](https://openrouter.ai/)
 [![Microsoft SQL](https://img.shields.io/badge/Microsoft-SQL%20Server-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/en-us/sql-server/)
@@ -23,7 +23,7 @@ This project demonstrates a **production-ready IT helpdesk automation system** t
 3. 📧 **Route** - Sends tickets to helpdesk system via email
 4. 👤 **Assign** - Auto-assigns tickets when IT staff replies to messages
 5. 🔒 **Close** - Auto-closes tickets when IT staff includes resolution details
-6. ⏰ **Remind** - Sends unclosed tickets at scheduled times (18:00 daily)
+6. ⏰ **Remind** - Sends pending ticket summary email to IT lead at 08:00 daily
 7. 📊 **Audit** - Logs all ticket operations to SQL Server for traceability
 
 ### 🎯 Business Impact
@@ -42,58 +42,62 @@ flowchart TB
         A[LINE Group Message]
     end
 
-    subgraph Main["🎫 Auto Ticket 1.7 (Main)"]
+    subgraph Main["🎫 Auto Ticket 1.7.1 (Main)"]
         B[Webhook Receiver]
         C{Event Type?}
-        D{Is IT Staff?}
-        E{Ticket Pattern?}
-        F[Unsend Handler]
+        D{Is IT Group?}
+        E{Is IT Staff?}
+        F{Ticket Pattern?}
+        G[Unsend Handler]
     end
 
     subgraph AI["🤖 CoreAI 1.3"]
-        G[AI Classification]
-        H[Branch Matching]
-        I[Category Detection]
+        H[AI Classification]
+        I[Branch Matching]
+        J[Category Detection]
     end
 
     subgraph Assign["👤 Auto Assign 1.2"]
-        J[Wait 1 min]
-        K[Lookup Ticket]
-        L[Update Assigned]
+        K[Wait 1 min]
+        L[Lookup Ticket]
+        M[Update Assigned]
     end
 
     subgraph Close["🔒 Auto Close 1.0"]
-        M{Close Pattern?}
-        N[Lookup Assigned]
-        O[Update Closed]
+        N{Close Pattern?}
+        O[Lookup Assigned]
+        P[Update Closed]
     end
 
-    subgraph Schedule["⏰ Schedule 1.2"]
-        P[18:00 Trigger]
-        Q[Send Unclosed Tickets]
+    subgraph Schedule["⏰ Schedule 1.3"]
+        Q[08:00 Trigger]
+        R[Get Pending Tickets]
+        S[Send Summary Email]
     end
 
     subgraph Audit["📊 LogSQLServer 1.0.1"]
-        R[Audit Logger]
+        T[Audit Logger]
     end
 
     subgraph Output["📊 Output"]
-        S[(Microsoft SQL)]
-        T[📧 Helpdesk Email]
+        U[(Microsoft SQL)]
+        V[📧 Helpdesk Email]
+        W[📧 IT Support Email]
     end
 
     A --> B --> C
     C -->|Text/Image| D
-    C -->|Unsend| F --> R
-    D -->|IT Staff Reply| Assign
-    D -->|User Message| E
-    E -->|Ticket Found| AI --> G --> H --> I --> T --> S --> R
-    E -->|No Ticket| S
-    J --> K --> L --> Close
-    M -->|การแก้ไขปัญหา| N --> O --> T --> S --> R
-    P --> Q --> T --> S --> R
-    Assign --> R
-    Schedule --> R
+    C -->|Unsend| G --> T
+    D -->|IT Group| Assign
+    D -->|Other Groups| E
+    E -->|IT Staff Reply| Assign
+    E -->|User Message| F
+    F -->|Ticket Found| AI --> H --> I --> J --> V --> U --> T
+    F -->|No Ticket| U
+    K --> L --> M --> Close
+    N -->|การแก้ไขปัญหา| O --> P --> V --> U --> T
+    Q --> R --> S --> W
+    Assign --> T
 ```
 
 ---
@@ -107,7 +111,7 @@ flowchart TB
 | 🏢 **Branch Detection** | Identifies 100+ branches from natural language | AI + Data Table Matching |
 | 👤 **Auto-Assignment** | Assigns tickets when IT staff replies to messages | Quote Reply Detection |
 | 🔒 **Auto-Close** | Closes tickets when IT staff includes resolution details | Pattern Detection (การแก้ไขปัญหา) |
-| ⏰ **Scheduled Reminders** | Sends unclosed tickets at 18:00 daily | n8n Schedule Trigger |
+| ⏰ **Scheduled Reminders** | Sends pending ticket summary to IT lead at 08:00 daily | n8n Schedule Trigger |
 | 🔄 **Unsend Handling** | Detects when users unsend messages and marks tickets accordingly | Event Detection + SQL Update |
 | 📸 **Media Support** | Handles images/videos with FTP upload and hyperlinks | FTP + Image Upload |
 | 📊 **Full Logging** | Logs all activities to Microsoft SQL Server for analytics | Microsoft SQL Server |
@@ -127,11 +131,11 @@ flowchart TB
 ├── 📝 .env.sanitizer.example              # Sanitizer configuration template
 │
 ├── 📁 workflows/                          # n8n workflow JSON files
-│   ├── Auto Ticket.json                  # Main workflow (v1.7)
+│   ├── Auto Ticket.json                  # Main workflow (v1.7.1)
 │   ├── Auto Ticket CoreAI.json           # AI classification sub-workflow (v1.3)
 │   ├── Auto Assign.json                  # Auto-assignment sub-workflow (v1.2)
 │   ├── Auto Close Ticket.json            # Auto-close sub-workflow (v1.0)
-│   ├── Schedule Ticket Unclose.json      # Scheduled reminder workflow (v1.2)
+│   ├── Schedule Ticket Unclose.json      # Scheduled summary workflow (v1.3)
 │   └── LogSQLServer.json                 # Audit logging sub-workflow (v1.0.1)
 │
 └── 📁 screenshots/                        # Workflow screenshots
@@ -148,13 +152,14 @@ flowchart TB
 
 ## 🔧 Workflows Overview
 
-### 1️⃣ Auto Ticket 1.7 (Main Workflow)
+### 1️⃣ Auto Ticket 1.7.1 (Main Workflow)
 The main orchestrator that receives LINE webhooks and routes messages to appropriate handlers.
 
 | Responsibility | Details |
 |---------------|---------|
 | Webhook handling | Receives POST from LINE Messaging API |
 | Event routing | Handles text, image, video, sticker, unsend, member events |
+| IT group detection | Routes IT group messages directly to Auto Assign |
 | IT staff detection | Checks if sender is IT team member |
 | Ticket detection | Regex pattern matching for ticket format |
 | Sub-workflow calls | Routes to CoreAI, Auto Assign, or LogSQLServer |
@@ -228,12 +233,16 @@ IT staff replies (quote) → System detects "การแก้ไขปัญ�
 
 ---
 
-### 5️⃣ Schedule Ticket Unclose 1.2 (Scheduled Reminder)
-Sends pending tickets that haven't been claimed by IT staff.
+### 5️⃣ Schedule Ticket Unclose 1.3 (Scheduled Summary)
+Sends a summary email of pending tickets to IT lead for follow-up.
 
 | Schedule | Action |
 |----------|--------|
-| 18:00 (evening) | Send all unclosed tickets |
+| 08:00 (morning) | Send pending ticket summary to IT_Support@[Company Name]1965.co.th |
+
+**Summary includes:**
+- Total count of pending tickets
+- Each ticket's: subject, branch, reporter, assigned IT staff, created date, problem detail
 
 📎 **Workflow:** [`workflows/Schedule Ticket Unclose.json`](./workflows/Schedule%20Ticket%20Unclose.json)
 
@@ -247,8 +256,7 @@ Centralized audit logging for all ticket operations across all workflows.
 | INSERT | New ticket created | Auto Ticket CoreAI 1.3 |
 | UPDATE | Ticket assigned | Auto Assign 1.2 |
 | CLOSE | Ticket closed | Auto Close Ticket 1.0 |
-| UNSEND | Message unsent by user | Auto Ticket 1.7 |
-| UNCLOSE | Ticket sent unclosed | Schedule Ticket Unclose 1.2 |
+| UNSEND | Message unsent by user | Auto Ticket 1.7.1 |
 
 📎 **Workflow:** [`workflows/LogSQLServer.json`](./workflows/LogSQLServer.json)
 
@@ -260,12 +268,15 @@ Centralized audit logging for all ticket operations across all workflows.
 stateDiagram-v2
     [*] --> pending : Ticket Created
     pending --> assigned : IT Staff Reply
-    pending --> Unclose : Schedule Reminder (No Close)
     pending --> unsent : User Unsends Message
     assigned --> closed : IT Staff Closes (การแก้ไขปัญหา)
-    Unclose --> [*] : Ticket Closed
     closed --> [*] : End
     unsent --> [*] : Cancelled
+
+    note right of assigned
+        Schedule (08:00) sends summary
+        email to IT lead (no status change)
+    end note
 ```
 
 ---
@@ -492,6 +503,13 @@ PLACEHOLDER_COMPANY_BRANCH=Branch Office
 ---
 
 ## 📝 Changelog
+
+### v1.7.4 (2026-02-18)
+- ✨ **New:** Auto Ticket 1.7.1 - Added "If IT Group" node to route IT group messages directly to Auto Assign
+- 🔧 **Enhanced:** Schedule Ticket Unclose 1.3 - Changed from 18:00 to 08:00 trigger time
+- 🔧 **Enhanced:** Schedule Ticket Unclose 1.3 - Now sends summary email to IT lead instead of updating individual tickets
+- 📝 **Updated:** Removed UNCLOSE action type from LogSQLServer (schedule no longer updates tickets)
+- 📝 **Updated:** Updated architecture diagrams to reflect IT Group routing
 
 ### v1.7.3 (2026-02-16)
 - 🔧 **Enhanced:** Schedule Ticket Unclose 1.2 - Removed 12:00 trigger (now only 18:00)

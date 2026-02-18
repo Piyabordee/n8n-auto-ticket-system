@@ -1,12 +1,12 @@
 {
-  "name": "Schedule Ticket Unclose 1.2",
+  "name": "Schedule Ticket Unclose 1.3",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 18
+              "triggerAtHour": 8
             }
           ]
         }
@@ -35,8 +35,8 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        944,
-        -32
+        416,
+        -320
       ],
       "id": "e03e0322-c963-4f61-a173-493e011e7b2a",
       "name": "Send email To DavMail",
@@ -46,7 +46,8 @@
           "id": "o2kgNvpcg8y3t93j",
           "name": "DavMail"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
@@ -89,31 +90,12 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        608,
-        -16
+        80,
+        -304
       ],
       "id": "13bbdc1b-b64a-4ac5-8225-7bff51df3ed1",
-      "name": "Loop Over Items"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'assigned';"
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.1,
-      "position": [
-        208,
-        0
-      ],
-      "id": "2b64061c-1197-472b-9818-093bae3b8e1e",
-      "name": "Get Pending Tickets",
-      "credentials": {
-        "microsoftSql": {
-          "id": "DlMjRKIkdeMbyUDh",
-          "name": "Microsoft SQL account"
-        }
-      }
+      "name": "Loop Over Items",
+      "disabled": true
     },
     {
       "parameters": {
@@ -123,8 +105,8 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        1120,
-        -32
+        592,
+        -320
       ],
       "id": "ffff049c-2596-4261-ba9d-6ecf1d60235a",
       "name": "Update Ticket Status",
@@ -133,7 +115,8 @@
           "id": "DlMjRKIkdeMbyUDh",
           "name": "Microsoft SQL account"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
@@ -226,11 +209,12 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1312,
-        -32
+        784,
+        -320
       ],
       "name": "Call LogSQLServer v1.0.0",
-      "id": "ddfd21ff-9431-437d-a335-e5814081593f"
+      "id": "ddfd21ff-9431-437d-a335-e5814081593f",
+      "disabled": true
     },
     {
       "parameters": {
@@ -255,12 +239,115 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        784,
-        -32
+        256,
+        -320
       ],
       "id": "c4ad9d70-59c6-4c2d-9fcc-b63982c71cbf",
       "name": "Match IT Team",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## วิธีเก่า วิธีการเปิดที่ไม่มีการปิด Ticket",
+        "height": 272,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        16,
+        -368
+      ],
+      "typeVersion": 1,
+      "id": "1eac5496-beb3-47ec-af91-c270d59c7594",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "fromEmail": "helpdesk@example.com",
+        "toEmail": "IT_Support@[Company Name]1965.co.th",
+        "subject": "=🔔 สรุป Ticket ตกค้าง ({{ $json.data.length }} รายการ) ประจำวันที่ {{ $now.setZone('Asia/Bangkok').toFormat('dd/MM/yyyy') }}",
+        "emailFormat": "text",
+        "text": "={{\n  \"🔔 สรุปรายการ Ticket ตกค้าง ทั้งหมด \" + $json.data.length + \" รายการ\\n\" +\n  \"==================================================\\n\\n\" +\n  $json.data.map((i, index) => {\n    \n    const dateObj = new Date(i.created_date);\n    const date = DateTime.fromJSDate(dateObj).setZone('Asia/Bangkok').toFormat('dd/MM/yyyy HH:mm');\n    const detail = i.clean_text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1]?.trim() || i.clean_text;\n    \n    return `${index + 1}. ${i.subject}\n    🏢 สาขา: ${i.branch_name} (${i.branch_company})\n    🙋🏻 ผู้แจ้ง: ${i.created_by}\n    👨🏻‍🔧 IT ผู้ดูแล: ${i.assigned_to}\n    📅 แจ้งเมื่อ: ${date}\n    📝 รายละเอียด: ${detail}`;\n  }).join('\\n\\n--------------------------------------------------\\n\\n')\n}}\n\n==================================================\n\n\n",
+        "options": {
+          "appendAttribution": false,
+          "attachments": ""
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        -16
+      ],
+      "id": "e4691556-6b0e-4750-baae-eabf4317eae1",
+      "name": "Send email To Lead IT Support",
+      "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
+      "credentials": {
+        "smtp": {
+          "id": "o2kgNvpcg8y3t93j",
+          "name": "DavMail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "assigned_to, message_id, subject, clean_text, branch_name, branch_company, created_date, created_by",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -16
+      ],
+      "id": "84ac61c4-0d9a-461f-8fe6-649dd5cf75fc",
+      "name": "Aggregate",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'assigned';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        -16
+      ],
+      "id": "bb52165e-aa26-4601-90a6-67b75b815ffa",
+      "name": "Get Pending Tickets 2",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "DlMjRKIkdeMbyUDh",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'assigned';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2b64061c-1197-472b-9818-093bae3b8e1e",
+      "name": "Get Pending Tickets 1",
+      "credentials": {
+        "microsoftSql": {
+          "id": "DlMjRKIkdeMbyUDh",
+          "name": "Microsoft SQL account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -269,7 +356,7 @@
       "main": [
         [
           {
-            "node": "Get Pending Tickets",
+            "node": "Get Pending Tickets 1",
             "type": "main",
             "index": 0
           }
@@ -291,7 +378,7 @@
       "main": [
         [
           {
-            "node": "Loop Over Items",
+            "node": "Get Pending Tickets 2",
             "type": "main",
             "index": 0
           }
@@ -311,17 +398,6 @@
         [
           {
             "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get Pending Tickets": {
-      "main": [
-        [
-          {
-            "node": "If notEmpty",
             "type": "main",
             "index": 0
           }
@@ -349,6 +425,44 @@
           }
         ]
       ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send email To Lead IT Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email To Lead IT Support": {
+      "main": [
+        []
+      ]
+    },
+    "Get Pending Tickets 2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pending Tickets 1": {
+      "main": [
+        [
+          {
+            "node": "If notEmpty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -359,7 +473,7 @@
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "a4a05d8d-26ea-4bcf-abb9-35a4c72fa1b5",
+  "versionId": "a818de33-c8a8-4363-a947-9cb319893438",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c0ee9619a3de3f52e872fba900c2709ab5e62b555937f4f80d0077ae523c5c4c"

@@ -1,5 +1,5 @@
 {
-  "name": "Auto Ticket 1.7",
+  "name": "Auto Ticket 1.7.1",
   "nodes": [
     {
       "parameters": {
@@ -200,7 +200,8 @@
           "id": "snp3QvieyhjBYtWH",
           "name": "FTP account"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
@@ -519,7 +520,7 @@
           "conditions": [
             {
               "id": "b402f475-ce82-48da-9cbc-cdbe1fa903e3",
-              "leftValue": "={{ $('SET - Normalize Clean Text').item.json.clean_text }}",
+              "leftValue": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
               "rightValue": "สาขา|แผนก",
               "operator": {
                 "type": "string",
@@ -528,7 +529,7 @@
             },
             {
               "id": "d2d4cb67-2c67-41f0-a21e-1aa625b42cdc",
-              "leftValue": "={{ $('SET - Normalize Clean Text').item.json.clean_text }}",
+              "leftValue": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
               "rightValue": "ปัญหา",
               "operator": {
                 "type": "string",
@@ -544,8 +545,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        6816,
-        2464
+        6944,
+        2304
       ],
       "id": "0e173092-3d85-4153-a9dd-67048e31a46b",
       "name": "If Ticket"
@@ -725,8 +726,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        7008,
-        2448
+        7136,
+        2288
       ],
       "name": "Call Auto Ticket CoreAI",
       "id": "67d51d79-6c35-4640-8e5f-fdcf06cecacf"
@@ -754,7 +755,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6432,
+        6592,
         2448
       ],
       "id": "f204d110-7322-4f58-afe8-140632e983d6",
@@ -788,7 +789,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        6592,
+        6752,
         2448
       ],
       "id": "4823595f-a9a0-45ec-96bb-1c9624d5e0e1",
@@ -984,8 +985,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        7008,
-        2288
+        7136,
+        2112
       ],
       "name": "Call Auto Close Ticket",
       "id": "bb16aa9a-67fe-41f2-87ae-51aa28831f1c",
@@ -1005,21 +1006,21 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "quotedMessageId": "={{ $('SET - Extract Sender IDs').item.json.quotedMessageId }}",
-            "userId": "={{ $('SET - Extract Sender IDs').item.json.userId }}",
+            "quotedMessageId": "={{ $('SET - Extract Sender IDs').first().json.quotedMessageId }}",
+            "userId": "={{ $('SET - Extract Sender IDs').first().json.userId }}",
             "body_events_firstItem": "={{ $('Webhook Line').first().json.body.events }}",
             "groupId_firstItem": "={{ $('Get Group/Room Summary').first().json.groupId }}",
             "userId_firstItem": "={{ $('HTTP - Get Sender Profile').first().json.userId }}",
             "displayName_firstItem": "={{ $('HTTP - Get Sender Profile').first().json.displayName }}",
             "raw_text_firstItem": "={{ $('SET - Normalize Clean Text').first().json.raw_text }}",
             "SET__Normalize_Clean_Text_isExecuted": "={{ $('SET - Normalize Clean Text').isExecuted }}",
-            "raw_text": "={{ $('SET - Normalize Clean Text').item.json.raw_text }}",
+            "raw_text": "={{ $('SET - Normalize Clean Text').first().json.raw_text }}",
             "Upload_Image_isExecuted": "={{ $('Upload Image').isExecuted }}",
             "clean_text_firstItem": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
-            "clean_text": "={{ $('SET - Normalize Clean Text').item.json.clean_text }}",
+            "clean_text": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
             "groupName_firstItem": "={{ $('Get Group/Room Summary').first().json.groupName }}",
-            "body_events": "={{ $('Webhook Line').item.json.body.events }}",
-            "datetime": "={{ $('SET - Extract Sender IDs').item.json.timpstamp }}"
+            "body_events": "={{ $('Webhook Line').first().json.body.events }}",
+            "datetime": "={{ $('SET - Extract Sender IDs').first().json.timpstamp }}"
           },
           "matchingColumns": [
             "quotedMessageId",
@@ -1182,8 +1183,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        6816,
-        2288
+        6944,
+        2112
       ],
       "name": "Call Auto Assign",
       "id": "b7bd05da-4ba3-483c-9d35-bf68dfb8e0f0",
@@ -1191,6 +1192,39 @@
       "maxTries": 5,
       "waitBetweenTries": 5000,
       "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "122b146f-fdb9-4211-b488-ee0ff1dc063a",
+              "leftValue": "={{ $('Webhook Line').item.json.body.events[0].source.groupId }}",
+              "rightValue": "=C8c3eb1bb6ae55a50c41fa75ebf9bc52d",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6432,
+        2320
+      ],
+      "id": "06fa48e5-341f-48d2-a84b-99523a81f83a",
+      "name": "If IT Group"
     }
   ],
   "pinData": {},
@@ -1199,7 +1233,7 @@
       "main": [
         [
           {
-            "node": "Get IT Team",
+            "node": "If IT Group",
             "type": "main",
             "index": 0
           }
@@ -1428,6 +1462,29 @@
           }
         ]
       ]
+    },
+    "If IT Group": {
+      "main": [
+        [
+          {
+            "node": "Call Auto Assign",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get IT Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1437,7 +1494,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "bfc53bca-de13-488a-a7b9-1e9d52fd7638",
+  "versionId": "3566c136-1bfa-4d08-a1b5-0b9cff3c0f05",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c0ee9619a3de3f52e872fba900c2709ab5e62b555937f4f80d0077ae523c5c4c"

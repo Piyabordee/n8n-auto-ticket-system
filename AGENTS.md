@@ -1,6 +1,6 @@
 # Auto_Ticket_1.7 - n8n Workflow Context Documentation
 
-> **Version**: 1.7.2 | **Date**: 2026-02-16
+> **Version**: 1.7.4 | **Date**: 2026-02-18
 > **Purpose**: Automated IT Helpdesk Ticketing System with Auto-Assignment, Auto-Close & Audit Logging
 > **Integration**: LINE Messaging API + AI Classification + Microsoft SQL Server
 
@@ -10,11 +10,11 @@
 
 | Workflow | ID | Type | Purpose |
 |----------|-----|------|---------|
-| **Auto Ticket 1.7** | `yjqa7NBnaFqtPjBd` | Webhook | Main entry - processes LINE messages |
+| **Auto Ticket 1.7.1** | `yjqa7NBnaFqtPjBd` | Webhook | Main entry - processes LINE messages |
 | **Auto Ticket CoreAI 1.3** | `vnzG9J1ipCdgk5Q4` | Sub-Workflow | AI classification & ticket creation |
 | **Auto Assign 1.2** | `4tIlVjstYxU09G6a` | Sub-Workflow | IT reply → assign ticket |
 | **Auto Close Ticket 1.0** | `USgdNP1aNHh1QJg3` | Sub-Workflow | IT reply with "การแก้ไขปัญหา" → close |
-| **Schedule Ticket Unclose 1.2** | `UBCa3WsUnv88uG-4Syw6l` | Schedule | Daily 18:00 - reopen unassigned |
+| **Schedule Ticket Unclose 1.3** | `UBCa3WsUnv88uG-4Syw6l` | Schedule | Daily 08:00 - send pending summary |
 | **LogSQLServer v1.0.1** | `q3ybqMcKYHUTu4qg` | Sub-Workflow | Centralized audit logging |
 
 ---
@@ -22,13 +22,13 @@
 ## System Flow
 
 ```
-LINE Message → Auto Ticket 1.7
+LINE Message → Auto Ticket 1.7.1
                       │
                       ├─► Unsend Event → Update status="unsent" → Log
                       ├─► IT Staff Reply → Auto Assign 1.2 → Auto Close Ticket 1.0
                       └─► Ticket Pattern → Auto Ticket CoreAI 1.3 → Create ticket (status="pending")
 
-Schedule (18:00) → Schedule Ticket Unclose 1.2 → assigned → Unclose → Log
+Schedule (08:00) → Schedule Ticket Unclose 1.3 → Send summary email to IT_Support@[Company Name].co.th
 
 All operations → LogSQLServer v1.0.1 → Audit Log
 ```
@@ -39,13 +39,15 @@ All operations → LogSQLServer v1.0.1 → Audit Log
 
 ```
 pending ──[IT Reply]──► assigned ──[Contains "การแก้ไขปัญหา"]──► closed
-   │                         │
-   └──[Unsend]──► unsent     └──[18:00 Schedule]──► Unclose
+   │
+   └──[Unsend]──► unsent
+
+Note: Schedule (08:00) sends summary email of assigned tickets to IT lead (no status change)
 ```
 
 ---
 
-## Main Workflow: Auto Ticket 1.7
+## Main Workflow: Auto Ticket 1.7.1
 
 ### Trigger
 | Property | Value |
@@ -65,6 +67,7 @@ pending ──[IT Reply]──► assigned ──[Contains "การแก้�
 | `Switch` | Routes by event type (memberJoined, sticker, unsend, memberLeft, Default) |
 | `If image` → `FTP` | Downloads & uploads media |
 | `SET - Normalize Clean Text` | Cleans text, removes @all, emojis |
+| `If IT Group` | Checks if groupId = IT group ID (C8c3eb1bb6ae55a50c41fa75ebf9bc52d) |
 | `Get IT Team` | Fetch IT staff by userId |
 | `If not IT Team` | Routes IT staff to Auto Assign, others to ticket check |
 | `If Ticket` | Checks for pattern: (`สาขา` OR `แผนก`) AND `ปัญหา` |
@@ -205,19 +208,29 @@ AI classification using OpenRouter LLM + ticket creation.
 
 ---
 
-## Schedule Workflow: Schedule Ticket Unclose 1.2
+## Schedule Workflow: Schedule Ticket Unclose 1.3
 
 | Property | Value |
 |----------|-------|
-| Trigger | Daily at 18:00 (Asia/Bangkok) |
-| Purpose | Reopen assigned tickets that weren't closed |
+| Trigger | Daily at 08:00 (Asia/Bangkok) |
+| Purpose | Send summary email of pending tickets to IT lead |
 
 ### Flow
 1. Get tickets where status="assigned"
-2. **Loop Over Items** (batch size: 1)
-3. Send email (no assignment commands)
-4. Update SQL: status="Unclose"
-5. Call LogSQLServer
+2. **If notEmpty** - check if there are pending tickets
+3. **Get Pending Tickets 2** - fetch ticket details for summary
+4. **Aggregate** - combine ticket data (assigned_to, message_id, subject, clean_text, branch_name, branch_company, created_date, created_by)
+5. **Send email To Lead IT Support** - summary email to `IT_Support@[Company Name].co.th` with:
+   - Total count of pending tickets
+   - Each ticket's: subject, branch, reporter, assigned IT staff, created date, problem detail
+
+### Old Method (Disabled)
+The previous method (v1.2) that individually looped over tickets and updated status="Unclose" is now disabled. Nodes include:
+- Loop Over Items
+- Match IT Team
+- Send email To DavMail
+- Update Ticket Status
+- Call LogSQLServer v1.0.0
 
 ---
 
@@ -242,11 +255,10 @@ Start → SELECT TOP (1) by message_id → Set Insert Log → INSERT into [log] 
 | by | User/system who performed action |
 
 ### Called By
-- Auto Ticket 1.7 (unsend events)
+- Auto Ticket 1.7.1 (unsend events)
 - Auto Ticket CoreAI 1.3 (INSERT)
 - Auto Assign 1.2 (UPDATE to assigned)
 - Auto Close Ticket 1.0 (UPDATE to closed)
-- Schedule Ticket Unclose 1.2 (UPDATE to Unclose)
 
 ---
 
@@ -308,7 +320,7 @@ Start → SELECT TOP (1) by message_id → Set Insert Log → INSERT into [log] 
 |---------|---------------|-------|
 | OpenRouter LLM | NEbQVn9EuXOOfFxh | deepseek/deepseek-chat-v3.1 |
 | FTP Server | snp3QvieyhjBYtWH | Upload media to ftp/ |
-| SMTP (DavMail) | o2kgNvpcg8y3t93j | helpdesk@example.com |
+| SMTP (DavMail) | o2kgNvpcg8y3t93j | helpdesk@example.com, IT_Support@[Company Name].co.th |
 | Microsoft SQL Server | DlMjRKIkdeMbyUDh | YourDatabase |
 
 ---
@@ -365,6 +377,12 @@ $('Webhook Line').item.json.body.events[0].unsend.messageId
 emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cause + "\n#set การแก้ไขปัญหา=" + reason + "\n#close"
 ```
 
+### IT Group ID
+```javascript
+// IT Group LINE groupId for direct routing
+'C8c3eb1bb6ae55a50c41fa75ebf9bc52d'
+```
+
 ---
 
 ## Error Handling
@@ -382,7 +400,7 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 
 ## Disabled Nodes
 
-### Auto Ticket 1.7
+### Auto Ticket 1.7.1
 | Node | Reason |
 |------|--------|
 | Wait (unsend path) | Direct SQL update used instead |
@@ -397,6 +415,15 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 |------|--------|
 | Send email To DavMail | Email sending disabled |
 
+### Schedule Ticket Unclose 1.3
+| Node | Reason |
+|------|--------|
+| Loop Over Items | Old v1.2 method - replaced by summary email |
+| Match IT Team | Old v1.2 method - replaced by summary email |
+| Send email To DavMail | Old v1.2 method - replaced by summary email |
+| Update Ticket Status | Old v1.2 method - replaced by summary email |
+| Call LogSQLServer v1.0.0 | Old v1.2 method - replaced by summary email |
+
 ---
 
 ## Notes for Modifications
@@ -404,13 +431,14 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 1. **Adding New Categories**: Update `Category` data table and `Set Command Ticket` in CoreAI
 2. **Adding New Branches**: Update `Branch Company` or `Branch Franchise` data tables
 3. **Modifying AI Prompts**: Edit `messages` parameter in Core Agent, Find Branch, or Find Sub Category
-4. **Changing Email Recipients**: Modify `toEmail` in `Send email To DavMail` node
+4. **Changing Email Recipients**: Modify `toEmail` in `Send email To DavMail` or `Send email To Lead IT Support` node
 5. **Adding New Event Handlers**: Add conditions to `Switch` node in main workflow
 6. **Modifying Auto-Assign Logic**: Edit nodes in Auto Assign 1.2 workflow
 7. **Modifying Auto-Close Logic**: Edit nodes in Auto Close Ticket 1.0 workflow
-8. **Changing Schedule Time**: Modify `Schedule Trigger` node in Schedule Ticket Unclose
+8. **Changing Schedule Time**: Modify `Schedule Trigger` node in Schedule Ticket Unclose (currently 08:00)
 9. **Adjusting Wait Time**: Modify `Wait` node in Auto Assign 1.2 (currently 1 minute)
-10. **Database Changes**: Modify SQL queries in `Microsoft SQL` nodes when schema changes
+10. **IT Group Routing**: Modify `If IT Group` node to change which groupId routes directly to Auto Assign (currently C8c3eb1bb6ae55a50c41fa75ebf9bc52d)
+11. **Database Changes**: Modify SQL queries in `Microsoft SQL` nodes when schema changes
 
 ---
 
@@ -418,11 +446,12 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.7.2 | 2026-02-16 | Schedule Unclose: removed 12:00 trigger (now 18:00 only). Auto Close: fixed close_time_minute SQL query |
+| 1.7.4 | 2026-02-18 | Auto Ticket 1.7.1: Added "If IT Group" node to route IT group messages directly to Auto Assign. Schedule Ticket Unclose 1.3: Changed from 18:00 to 08:00, now sends summary email to IT lead instead of updating tickets individually |
+| 1.7.3 | 2026-02-16 | Schedule Unclose: removed 12:00 trigger (now 18:00 only). Auto Close: fixed close_time_minute SQL query |
 | 1.7.1 | 2026-02-09 | Full audit trail with LogSQLServer v1.0.1 for all operations |
 | 1.7 | 2026-02-12 | **Auto Close Ticket 1.0** added for closing tickets with "การแก้ไขปัญหา". Schedule renamed to Unclose. New "closed" and "Unclose" statuses |
 | 1.7 | 2026-02-04 | Migrated from Google Sheets to SQL Server. LLM changed to deepseek-chat-v3.1. CoreAI 1.1→1.3, Auto Assign 1.1→1.2 |
 
 ---
 
-*Generated: 2026-02-17*
+*Generated: 2026-02-18*
