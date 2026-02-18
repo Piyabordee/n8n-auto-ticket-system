@@ -82,7 +82,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        736,
+        704,
         -336
       ],
       "id": "4abb890a-63e6-46b9-896c-681f19987dd4",
@@ -103,7 +103,7 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1056,
+        1024,
         -352
       ],
       "id": "3b2db305-addb-4a78-a8b7-13dd5b39e699",
@@ -142,7 +142,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        896,
+        864,
         -352
       ],
       "id": "00158425-0563-401b-ab2c-11b4e351436c",
@@ -152,12 +152,12 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'closed',\n    close_cause = N'{{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}',\n    close_reason = N'{{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').first().json.fromUser }}',\n    close_time_minute = DATEDIFF(MINUTE, assigned_date, GETDATE())\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
+        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'closed',\n    close_cause = N'{{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}',\n    close_reason = N'{{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').first().json.fromUser }}',\n    close_time_minute = CASE \n    WHEN DATEDIFF(MINUTE, assigned_date, GETDATE()) - 1 < 0 THEN 0 \n    ELSE DATEDIFF(MINUTE, assigned_date, GETDATE()) - 1 \nEND\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
       },
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        1248,
+        1216,
         -352
       ],
       "id": "84d10e1f-b497-467e-8a6d-08c20bfb42bf",
@@ -260,7 +260,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1440,
+        1408,
         -352
       ],
       "name": "Call LogSQLServer",
@@ -384,7 +384,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "binaryMode": "separate"
   },
-  "versionId": "b7bf7e59-4db0-4c63-a2e1-ba5b64963393",
+  "versionId": "e7e85da0-6ab5-4170-bd5f-4a54458bdc84",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"
