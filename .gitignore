@@ -23,3 +23,11 @@ CLAUDE.md
 LIFF/.env
 .env.sanitizer
 SQL/SQLQuery.sql
+
+# LIFF / Next.js specific
+LIFF/.env.local
+LIFF/.next/
+LIFF/out/
+LIFF/.turbo/
+LIFF/vercel/
+*.tgz
