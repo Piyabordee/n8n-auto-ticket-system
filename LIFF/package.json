@@ -12,7 +12,7 @@
   "dependencies": {
     "@line/liff": "^2.17.0",
     "mssql": "^10.0.0",
-    "next": "14.2.5",
+    "next": "15.5.10",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "recharts": "^3.7.0",
