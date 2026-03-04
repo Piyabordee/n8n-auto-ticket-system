@@ -9,6 +9,8 @@ export interface LiffContextType {
   loading: boolean
   error: Error | null
   initialized: boolean
+  login: (userId: string, displayName?: string) => void
+  logout: () => void
 }
 
 export interface Ticket {

@@ -1,12 +1,11 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { LiffProvider } from '@/components/LiffProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'IT Helpdesk LIFF App',
-  description: 'Submit and track IT tickets via LINE',
+  title: 'IT Helpdesk Admin',
+  description: 'Admin dashboard for IT tickets',
 }
 
 export default function RootLayout({
@@ -17,9 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <LiffProvider>
-          {children}
-        </LiffProvider>
+        {children}
       </body>
     </html>
   )

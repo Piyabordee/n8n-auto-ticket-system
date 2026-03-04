@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { Liff } from '@line/liff'
 import { LiffContextType, LiffProfile } from '@/types'
 
 const LiffContext = createContext<LiffContextType | undefined>(undefined)
@@ -21,51 +20,48 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    const initLiff = async () => {
-      try {
-        // Mock data for local development
-        if (process.env.NODE_ENV === 'development') {
-          setProfile({
-            userId: 'U11ffef7226ca75c66fb4c0af4af00dc6', // ธัญญ์นรี
-            displayName: 'ธัญญ์นรี เก๋ 4289',
-            pictureUrl: 'https://example.com/avatar.png'
-          })
-          setLoading(false)
-          setInitialized(true)
-          return
-        }
+    // Get userId from localStorage or prompt user
+    const storedUserId = localStorage.getItem('liff_user_id')
+    const storedDisplayName = localStorage.getItem('liff_display_name')
 
-        // Initialize LIFF in production
-        const liff = (await import('@line/liff')).default
-        await liff.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID || '' })
-
-        if (!liff.isLoggedIn()) {
-          liff.login()
-          return
-        }
-
-        const lineProfile = await liff.getProfile()
-        setProfile({
-          userId: lineProfile.userId,
-          displayName: lineProfile.displayName,
-          pictureUrl: lineProfile.pictureUrl
-        })
-        setInitialized(true)
-      } catch (err) {
-        setError(err as Error)
-      } finally {
-        setLoading(false)
-      }
+    if (storedUserId) {
+      setProfile({
+        userId: storedUserId,
+        displayName: storedDisplayName || 'User',
+        pictureUrl: undefined
+      })
+      setInitialized(true)
     }
-
-    initLiff()
+    setLoading(false)
   }, [])
+
+  const login = (userId: string, displayName?: string) => {
+    localStorage.setItem('liff_user_id', userId)
+    if (displayName) {
+      localStorage.setItem('liff_display_name', displayName)
+    }
+    setProfile({
+      userId,
+      displayName: displayName || 'User',
+      pictureUrl: undefined
+    })
+    setInitialized(true)
+  }
+
+  const logout = () => {
+    localStorage.removeItem('liff_user_id')
+    localStorage.removeItem('liff_display_name')
+    setProfile(null)
+    setInitialized(false)
+  }
 
   const value = {
     profile,
     loading,
     error,
-    initialized
+    initialized,
+    login,
+    logout
   }
 
   return (
