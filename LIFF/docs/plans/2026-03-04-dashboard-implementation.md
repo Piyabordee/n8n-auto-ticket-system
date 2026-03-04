@@ -1,209 +1,678 @@
-# Dashboard Page Implementation Plan
+# IT Helpdesk Dashboard Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build a Dashboard page (`/`) that displays user's ticket KPIs (Total, Closed) and recent tickets with auto-sync every 24 hours.
+**Goal:** Create a dashboard UI matching the reference image with KPI metrics, charts (Recharts), and paginated ticket table with filtering capabilities.
 
-**Architecture:** Client-side Dashboard page fetches from Next.js API route (`/api/tickets`), which queries SQL Server directly using `mssql` package. Auto-sync uses LocalStorage to track last fetch timestamp.
+**Architecture:** Single Client Component page fetching data from 3 new API routes (`/api/dashboard/stats`, `/api/dashboard/charts`, `/api/dashboard/tickets`). Recharts for visualization, Tailwind for styling to match yellow-header design.
 
-**Tech Stack:** Next.js 14 App Router, TypeScript, Tailwind CSS, mssql package, LocalStorage
+**Tech Stack:** Next.js 14 (App Router), React, TypeScript, Tailwind CSS, Recharts, date-fns, SQL Server (mssql)
 
 ---
 
-## Task 1: Add mssql dependency
+## Prerequisites
+
+### Task 0: Install Dependencies
 
 **Files:**
 - Modify: `LIFF/package.json`
 
-**Step 1: Add mssql package**
-
-Open `LIFF/package.json` and add to dependencies:
-```json
-"mssql": "^10.0.0"
-```
-
-**Step 2: Install dependency**
-
-Run: `cd LIFF && npm install`
-Expected: Package installs successfully
-
-**Step 3: Commit**
+**Step 1: Install recharts and date-fns**
 
 ```bash
-cd LIFF
+cd c:/dev/LIFF
+npm install recharts date-fns
+```
+
+Expected: Packages added to package.json and node_modules
+
+**Step 2: Commit**
+
+```bash
 git add package.json package-lock.json
-git commit -m "deps: add mssql package for SQL Server connection"
+git commit -m "deps: add recharts and date-fns for dashboard"
 ```
 
 ---
 
-## Task 2: Create SQL connection utility
+## API Routes
+
+### Task 1: Create Stats API Route
 
 **Files:**
-- Create: `LIFF/app/lib/sql.ts`
+- Create: `LIFF/app/api/dashboard/stats/route.ts`
 
-**Step 1: Create SQL connection utility**
+**Step 1: Write the stats API route**
 
-Create file `LIFF/app/lib/sql.ts`:
 ```typescript
+import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
 
-const config = {
+const sqlConfig = {
   server: process.env.SQL_SERVER || '',
   database: process.env.SQL_DATABASE || '',
   user: process.env.SQL_USER || '',
   password: process.env.SQL_PASSWORD || '',
   options: {
-    encrypt: true,
-    trustServerCertificate: true
+    encrypt: false,
+    trustServerCertificate: true,
+    enableArithAbort: true
   }
 }
 
-export async function getConnection() {
-  try {
-    const pool = await sql.connect(config)
-    return pool
-  } catch (error) {
-    console.error('SQL connection error:', error)
-    throw error
-  }
-}
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const startDate = searchParams.get('startDate')
+  const endDate = searchParams.get('endDate')
+  const status = searchParams.get('status')
+  const branchCompany = searchParams.get('branchCompany')
 
-export async function closeConnection(pool: sql.ConnectionPool) {
+  let pool: sql.ConnectionPool | null = null
+
   try {
-    await pool.close()
+    pool = await sql.connect(sqlConfig)
+
+    // Build WHERE clause
+    let whereClause = '1=1'
+    const params: any = {}
+
+    if (startDate) {
+      whereClause += ' AND created_date >= @startDate'
+      params.startDate = sql.DateTime(new Date(startDate))
+    }
+    if (endDate) {
+      whereClause += ' AND created_date <= @endDate'
+      params.endDate = sql.DateTime(new Date(endDate))
+    }
+    if (status && status !== 'all') {
+      whereClause += ' AND status = @status'
+      params.status = sql.VarChar(status)
+    }
+    if (branchCompany && branchCompany !== 'all') {
+      whereClause += ' AND branch_company = @branchCompany'
+      params.branchCompany = sql.VarChar(branchCompany)
+    }
+
+    // Equipment count (HW, PRINTER, CAMERA, NETWORK)
+    const equipResult = await pool.request()
+      .input('startDate', params.startDate || sql.DateTime('1900-01-01'))
+      .input('endDate', params.endDate || sql.DateTime('2100-01-01'))
+      .input('status', params.status || sql.VarChar('all'))
+      .input('branchCompany', params.branchCompany || sql.VarChar('all'))
+      .query(`
+        SELECT COUNT(*) as count
+        FROM [Dev_Born].[dbo].[ticket]
+        WHERE ${whereClause}
+        AND category IN ('HW', 'PRINTER', 'CAMERA', 'NETWORK')
+      `)
+
+    // Task count (INC intent)
+    const taskResult = await pool.request()
+      .input('startDate', params.startDate || sql.DateTime('1900-01-01'))
+      .input('endDate', params.endDate || sql.DateTime('2100-01-01'))
+      .input('status', params.status || sql.VarChar('all'))
+      .input('branchCompany', params.branchCompany || sql.VarChar('all'))
+      .query(`
+        SELECT COUNT(*) as count
+        FROM [Dev_Born].[dbo].[ticket]
+        WHERE ${whereClause}
+        AND intent = 'INC'
+      `)
+
+    // Tools count (SR intent)
+    const toolsResult = await pool.request()
+      .input('startDate', params.startDate || sql.DateTime('1900-01-01'))
+      .input('endDate', params.endDate || sql.DateTime('2100-01-01'))
+      .input('status', params.status || sql.VarChar('all'))
+      .input('branchCompany', params.branchCompany || sql.VarChar('all'))
+      .query(`
+        SELECT COUNT(*) as count
+        FROM [Dev_Born].[dbo].[ticket]
+        WHERE ${whereClause}
+        AND intent = 'SR'
+      `)
+
+    return NextResponse.json({
+      equipmentCount: equipResult.recordset[0].count,
+      taskCount: taskResult.recordset[0].count,
+      toolsCount: toolsResult.recordset[0].count
+    })
   } catch (error) {
-    console.error('SQL close error:', error)
+    console.error('Stats API Error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch stats', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  } finally {
+    if (pool) await pool.close()
   }
 }
 ```
 
-**Step 2: Create .env.local.example**
+**Step 2: Test the API**
 
-Create file `LIFF/.env.local.example`:
-```env
-# LIFF
-NEXT_PUBLIC_LIFF_ID=your-liff-id-here
+Run dev server: `npm run dev`
 
-# SQL Server
-SQL_SERVER=your_server
-SQL_DATABASE=YourDatabase
-SQL_USER=your_username
-SQL_PASSWORD=your_password
-```
+Test: `http://localhost:3000/api/dashboard/stats`
+
+Expected: JSON response with equipmentCount, taskCount, toolsCount
 
 **Step 3: Commit**
 
 ```bash
-cd LIFF
-git add app/lib/sql.ts .env.local.example
-git commit -m "feat: add SQL connection utility"
+git add app/api/dashboard/stats/route.ts
+git commit -m "feat: add dashboard stats API endpoint"
 ```
 
 ---
 
-## Task 3: Create API route for tickets
+### Task 2: Create Charts API Route
 
 **Files:**
-- Create: `LIFF/app/api/tickets/route.ts`
+- Create: `LIFF/app/api/dashboard/charts/route.ts`
 
-**Step 1: Create tickets API route**
+**Step 1: Write the charts API route**
 
-Create file `LIFF/app/api/tickets/route.ts`:
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
-import { getConnection, closeConnection } from '@/lib/sql'
 import sql from 'mssql'
 
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams
-    const userId = searchParams.get('userId')
+const sqlConfig = {
+  server: process.env.SQL_SERVER || '',
+  database: process.env.SQL_DATABASE || '',
+  user: process.env.SQL_USER || '',
+  password: process.env.SQL_PASSWORD || '',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true,
+    enableArithAbort: true
+  }
+}
 
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 })
+// Category to Thai label mapping
+const CATEGORY_LABELS: Record<string, string> = {
+  'SW': 'เครื่องคอมพิวเตอร์/Case',
+  'HW': 'เครื่องคอมพิวเตอร์/Case',
+  'PRINTER': 'เครื่องพิมพ์เตอร์',
+  'NETWORK': 'เครือข่าย [Internet]',
+  'CAMERA': 'กล้อง',
+  'RATE': 'โทรทัศน์ [Television]',
+  'POS': 'ไมโครโฟน [Microphone]',
+  'PASSWORD': 'รหัสผ่าน',
+  'REQUEST': 'คำขอ',
+  'SOFTWARE': 'ซอฟต์แวร์ [Software]',
+}
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const startDate = searchParams.get('startDate')
+  const endDate = searchParams.get('endDate')
+  const status = searchParams.get('status')
+  const branchCompany = searchParams.get('branchCompany')
+
+  let pool: sql.ConnectionPool | null = null
+
+  try {
+    pool = await sql.connect(sqlConfig)
+
+    // Build WHERE clause
+    let whereClause = '1=1'
+    const params: any = {}
+
+    if (startDate) {
+      whereClause += ' AND created_date >= @startDate'
+      params.startDate = sql.DateTime(new Date(startDate))
+    }
+    if (endDate) {
+      whereClause += ' AND created_date <= @endDate'
+      params.endDate = sql.DateTime(new Date(endDate))
+    }
+    if (status && status !== 'all') {
+      whereClause += ' AND status = @status'
+      params.status = sql.VarChar(status)
+    }
+    if (branchCompany && branchCompany !== 'all') {
+      whereClause += ' AND branch_company = @branchCompany'
+      params.branchCompany = sql.VarChar(branchCompany)
     }
 
-    const pool = await getConnection()
-
-    // KPI: Total tickets
-    const totalResult = await pool.request()
-      .input('userId', sql.VarChar(50), userId)
+    // By category
+    const categoryResult = await pool.request()
+      .input('startDate', params.startDate || sql.DateTime('1900-01-01'))
+      .input('endDate', params.endDate || sql.DateTime('2100-01-01'))
+      .input('status', params.status || sql.VarChar('all'))
+      .input('branchCompany', params.branchCompany || sql.VarChar('all'))
       .query(`
-        SELECT COUNT(*) as total
-        FROM [YourDatabase].[dbo].[ticket]
-        WHERE userid = @userId
-      `)
-    const total = totalResult.recordset[0].total
-
-    // KPI: Closed tickets
-    const closedResult = await pool.request()
-      .input('userId', sql.VarChar(50), userId)
-      .query(`
-        SELECT COUNT(*) as closed
-        FROM [YourDatabase].[dbo].[ticket]
-        WHERE userid = @userId AND status = 'closed'
-      `)
-    const closed = closedResult.recordset[0].closed
-
-    // Recent tickets
-    const ticketsResult = await pool.request()
-      .input('userId', sql.VarChar(50), userId)
-      .query(`
-        SELECT TOP 20
-          message_id, subject, status, category,
-          sub_category, branch_name, created_date
-        FROM [YourDatabase].[dbo].[ticket]
-        WHERE userid = @userId
-        ORDER BY created_date DESC
+        SELECT category, COUNT(*) as value
+        FROM [Dev_Born].[dbo].[ticket]
+        WHERE ${whereClause}
+        GROUP BY category
       `)
 
-    await closeConnection(pool)
+    // By sub_category
+    const subCategoryResult = await pool.request()
+      .input('startDate', params.startDate || sql.DateTime('1900-01-01'))
+      .input('endDate', params.endDate || sql.DateTime('2100-01-01'))
+      .input('status', params.status || sql.VarChar('all'))
+      .input('branchCompany', params.branchCompany || sql.VarChar('all'))
+      .query(`
+        SELECT sub_category, COUNT(*) as value
+        FROM [Dev_Born].[dbo].[ticket]
+        WHERE ${whereClause}
+        AND sub_category IS NOT NULL
+        GROUP BY sub_category
+      `)
+
+    // Map category results
+    const byCategory = categoryResult.recordset.map(row => ({
+      name: CATEGORY_LABELS[row.category] || row.category,
+      value: row.value
+    }))
+
+    // Map sub_category results
+    const bySubCategory = subCategoryResult.recordset.map(row => ({
+      name: row.sub_category,
+      value: row.value
+    }))
 
     return NextResponse.json({
-      kpi: { total, closed },
-      tickets: ticketsResult.recordset
+      byCategory,
+      bySubCategory
     })
-
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Charts API Error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch charts data', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  } finally {
+    if (pool) await pool.close()
   }
 }
+```
+
+**Step 2: Test the API**
+
+Test: `http://localhost:3000/api/dashboard/charts`
+
+Expected: JSON with byCategory and bySubCategory arrays
+
+**Step 3: Commit**
+
+```bash
+git add app/api/dashboard/charts/route.ts
+git commit -m "feat: add dashboard charts API endpoint"
+```
+
+---
+
+### Task 3: Create Tickets API Route
+
+**Files:**
+- Create: `LIFF/app/api/dashboard/tickets/route.ts`
+
+**Step 1: Write the tickets API route**
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import sql from 'mssql'
+
+const sqlConfig = {
+  server: process.env.SQL_SERVER || '',
+  database: process.env.SQL_DATABASE || '',
+  user: process.env.SQL_USER || '',
+  password: process.env.SQL_PASSWORD || '',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true,
+    enableArithAbort: true
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const page = parseInt(searchParams.get('page') || '1')
+  const pageSize = parseInt(searchParams.get('pageSize') || '100')
+  const startDate = searchParams.get('startDate')
+  const endDate = searchParams.get('endDate')
+  const status = searchParams.get('status')
+  const branchCompany = searchParams.get('branchCompany')
+
+  const offset = (page - 1) * pageSize
+
+  let pool: sql.ConnectionPool | null = null
+
+  try {
+    pool = await sql.connect(sqlConfig)
+
+    // Build WHERE clause
+    let whereClause = '1=1'
+    const params: any = {}
+
+    if (startDate) {
+      whereClause += ' AND created_date >= @startDate'
+      params.startDate = sql.DateTime(new Date(startDate))
+    }
+    if (endDate) {
+      whereClause += ' AND created_date <= @endDate'
+      params.endDate = sql.DateTime(new Date(endDate))
+    }
+    if (status && status !== 'all') {
+      whereClause += ' AND status = @status'
+      params.status = sql.VarChar(status)
+    }
+    if (branchCompany && branchCompany !== 'all') {
+      whereClause += ' AND branch_company = @branchCompany'
+      params.branchCompany = sql.VarChar(branchCompany)
+    }
+
+    // Get total count
+    const countResult = await pool.request()
+      .input('startDate', params.startDate || sql.DateTime('1900-01-01'))
+      .input('endDate', params.endDate || sql.DateTime('2100-01-01'))
+      .input('status', params.status || sql.VarChar('all'))
+      .input('branchCompany', params.branchCompany || sql.VarChar('all'))
+      .query(`
+        SELECT COUNT(*) as total
+        FROM [Dev_Born].[dbo].[ticket]
+        WHERE ${whereClause}
+      `)
+
+    const total = countResult.recordset[0].total
+
+    // Get paginated tickets
+    const ticketsResult = await pool.request()
+      .input('startDate', params.startDate || sql.DateTime('1900-01-01'))
+      .input('endDate', params.endDate || sql.DateTime('2100-01-01'))
+      .input('status', params.status || sql.VarChar('all'))
+      .input('branchCompany', params.branchCompany || sql.VarChar('all'))
+      .input('offset', sql.Int, offset)
+      .input('pageSize', sql.Int, pageSize)
+      .query(`
+        SELECT
+          message_id,
+          created_date,
+          subject,
+          fromuser,
+          branch_name,
+          category,
+          sub_category,
+          status
+        FROM [Dev_Born].[dbo].[ticket]
+        WHERE ${whereClause}
+        ORDER BY created_date DESC
+        OFFSET @offset ROWS
+        FETCH NEXT @pageSize ROWS ONLY
+      `)
+
+    return NextResponse.json({
+      items: ticketsResult.recordset,
+      total,
+      page,
+      pageSize
+    })
+  } catch (error) {
+    console.error('Tickets API Error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch tickets', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  } finally {
+    if (pool) await pool.close()
+  }
+}
+```
+
+**Step 2: Test the API**
+
+Test: `http://localhost:3000/api/dashboard/tickets?page=1&pageSize=10`
+
+Expected: JSON with items array, total, page, pageSize
+
+**Step 3: Commit**
+
+```bash
+git add app/api/dashboard/tickets/route.ts
+git commit -m "feat: add dashboard tickets API endpoint with pagination"
+```
+
+---
+
+## Dashboard Components
+
+### Task 4: Create Dashboard Components Directory
+
+**Files:**
+- Create: `LIFF/app/components/dashboard/` directory
+
+**Step 1: Create directory structure**
+
+```bash
+mkdir -p c:/dev/LIFF/app/components/dashboard
 ```
 
 **Step 2: Commit**
 
 ```bash
-cd LIFF
-git add app/api/tickets/route.ts
-git commit -m "feat: add tickets API route"
+git add app/components/dashboard/
+git commit -m "chore: create dashboard components directory"
 ```
 
 ---
 
-## Task 4: Create KPICard component
+### Task 5: Create Header Component
 
 **Files:**
-- Create: `LIFF/app/components/KPICard.tsx`
+- Create: `LIFF/app/components/dashboard/Header.tsx`
 
-**Step 1: Create KPICard component**
+**Step 1: Write the Header component**
 
-Create file `LIFF/app/components/KPICard.tsx`:
 ```typescript
-interface KPICardProps {
-  label: string
-  value: number
-  icon: string
+'use client'
+
+import { useState } from 'react'
+
+interface HeaderProps {
+  status: string
+  setStatus: (status: string) => void
+  branchCompany: string
+  setBranchCompany: (company: string) => void
+  showCalendar: boolean
+  setShowCalendar: (show: boolean) => void
+  dateRange: { year: number; quarter?: number; month?: number }
+  setDateRange: (range: any) => void
 }
 
-export function KPICard({ label, value, icon }: KPICardProps) {
+export default function Header({
+  status,
+  setStatus,
+  branchCompany,
+  setBranchCompany,
+  showCalendar,
+  setShowCalendar,
+  dateRange,
+  setDateRange,
+}: HeaderProps) {
   return (
-    <div className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
-      <div className="text-3xl">{icon}</div>
-      <div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className="text-sm text-gray-600">{label}</div>
+    <div className="bg-header-yellow">
+      <div className="max-w-full mx-auto px-4 py-3">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          {/* Left: Logo and Title */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+              <span className="text-xl">🖥️</span>
+            </div>
+            <h1 className="text-lg font-semibold text-gray-900">
+              ระบบบริหารจัดการอุปกรณ์ และบริการซ่อมสอบอุปกรณ์ IT
+            </h1>
+          </div>
+
+          {/* Right: Filters */}
+          <div className="flex items-center gap-3">
+            {/* Status Filter */}
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">สถานะทั้งหมด</option>
+              <option value="pending">รอดำเนินการ</option>
+              <option value="assigned">ดำเนินการ</option>
+              <option value="closed">เสร็จสิ้น</option>
+            </select>
+
+            {/* Department Filter */}
+            <select
+              value={branchCompany}
+              onChange={(e) => setBranchCompany(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">โครงการ/หน่วยงานทั้งหมด</option>
+              <option value="Branch SPR">Branch SPR</option>
+              <option value="Branch Franchise">Branch Franchise</option>
+            </select>
+
+            {/* Date Filter */}
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px] text-left"
+            >
+              {dateRange.month
+                ? `${dateRange.year} ไตรมาส ${dateRange.quarter} เดือน ${dateRange.month}`
+                : dateRange.quarter
+                ? `${dateRange.year} ไตรมาส ${dateRange.quarter}`
+                : `${dateRange.year}`}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Calendar Popup */}
+      {showCalendar && (
+        <DateFilterPopup
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          onClose={() => setShowCalendar(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Simple Date Filter Popup Component
+function DateFilterPopup({
+  dateRange,
+  setDateRange,
+  onClose,
+}: {
+  dateRange: { year: number; quarter?: number; month?: number }
+  setDateRange: (range: any) => void
+  onClose: () => void
+}) {
+  const currentYear = new Date().getFullYear()
+  const years = [currentYear - 1, currentYear, currentYear + 1]
+  const quarters = [1, 2, 3, 4]
+  const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl p-6 min-w-[400px]" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-lg font-semibold mb-4">เลือกช่วงเวลา</h3>
+
+        {/* Year Selection */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">ปี</label>
+          <select
+            value={dateRange.year}
+            onChange={(e) => setDateRange({ ...dateRange, year: parseInt(e.target.value) })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y + 543}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Quarter Selection */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">ไตรมาส (ไม่เลือก = ทั้งปี)</label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setDateRange({ ...dateRange, quarter: undefined, month: undefined })}
+              className={`px-4 py-2 rounded-md text-sm ${
+                !dateRange.quarter ? 'bg-blue-500 text-white' : 'bg-gray-200'
+              }`}
+            >
+              ทั้งปี
+            </button>
+            {quarters.map((q) => (
+              <button
+                key={q}
+                onClick={() => setDateRange({ ...dateRange, quarter: q, month: undefined })}
+                className={`px-4 py-2 rounded-md text-sm ${
+                  dateRange.quarter === q ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                Q{q}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Month Selection */}
+        {dateRange.quarter && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">เดือน (ไม่เลือก = ทั้งไตรมาส)</label>
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                onClick={() => setDateRange({ ...dateRange, month: undefined })}
+                className={`px-2 py-2 rounded-md text-xs ${
+                  !dateRange.month ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                ทั้งไตรมาส
+              </button>
+              {months.map((m) => {
+                const quarterMonths = dateRange.quarter === 1 ? [1, 2, 3]
+                  : dateRange.quarter === 2 ? [4, 5, 6]
+                  : dateRange.quarter === 3 ? [7, 8, 9]
+                  : [10, 11, 12]
+
+                if (!quarterMonths.includes(m)) return null
+
+                return (
+                  <button
+                    key={m}
+                    onClick={() => setDateRange({ ...dateRange, month: m })}
+                    className={`px-2 py-2 rounded-md text-xs ${
+                      dateRange.month === m ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                    }`}
+                  >
+                    {m}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-2 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+          >
+           ตกลง
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -213,85 +682,329 @@ export function KPICard({ label, value, icon }: KPICardProps) {
 **Step 2: Commit**
 
 ```bash
-cd LIFF
-git add app/components/KPICard.tsx
-git commit -m "feat: add KPICard component"
+git add app/components/dashboard/Header.tsx
+git commit -m "feat: add dashboard Header component with filters"
 ```
 
 ---
 
-## Task 5: Create TicketCard component
+### Task 6: Create KPI Cards Component
 
 **Files:**
-- Create: `LIFF/app/components/TicketCard.tsx`
+- Create: `LIFF/app/components/dashboard/KPICards.tsx`
 
-**Step 1: Create TicketCard component**
+**Step 1: Write the KPI Cards component**
 
-Create file `LIFF/app/components/TicketCard.tsx`:
 ```typescript
+'use client'
+
+interface KPICardsProps {
+  equipmentCount: number
+  taskCount: number
+  toolsCount: number
+}
+
+export default function KPICards({ equipmentCount, taskCount, toolsCount }: KPICardsProps) {
+  return (
+    <div className="grid grid-cols-3 gap-4 mb-6">
+      {/* Equipment Count Card */}
+      <div className="bg-gray-900 rounded-lg p-4">
+        <div className="text-white text-sm mb-1">จำนวนอุปกรณ์</div>
+        <div className="text-white text-3xl font-bold">{equipmentCount}</div>
+      </div>
+
+      {/* Task Count Card */}
+      <div className="bg-gray-700 rounded-lg p-4">
+        <div className="text-white text-sm mb-1">จำนวนงาน</div>
+        <div className="text-white text-3xl font-bold">{taskCount}</div>
+      </div>
+
+      {/* Tools Count Card */}
+      <div className="bg-blue-600 rounded-lg p-4">
+        <div className="text-white text-sm mb-1">จำนวนเครื่องมือ</div>
+        <div className="text-white text-3xl font-bold">{toolsCount}</div>
+      </div>
+    </div>
+  )
+}
+```
+
+**Step 2: Commit**
+
+```bash
+git add app/components/dashboard/KPICards.tsx
+git commit -m "feat: add dashboard KPI Cards component"
+```
+
+---
+
+### Task 7: Create Bar Charts Component
+
+**Files:**
+- Create: `LIFF/app/components/dashboard/BarChartSection.tsx`
+
+**Step 1: Write the Bar Charts component**
+
+```typescript
+'use client'
+
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+
+interface BarChartSectionProps {
+  byCategory: Array<{ name: string; value: number }>
+  bySubCategory: Array<{ name: string; value: number }>
+}
+
+export default function BarChartSection({ byCategory, bySubCategory }: BarChartSectionProps) {
+  return (
+    <div className="grid grid-cols-2 gap-4 mb-6">
+      {/* Equipment by Category Bar Chart */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">จำนวนอุปกรณ์/ประเภท</h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={byCategory}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" fill="#22c55e" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Tasks by Sub Category Bar Chart */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">จำนวนงาน/ประเภท</h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={bySubCategory.slice(0, 10)}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" fill="#22c55e" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+```
+
+**Step 2: Commit**
+
+```bash
+git add app/components/dashboard/BarChartSection.tsx
+git commit -m "feat: add dashboard Bar Charts component"
+```
+
+---
+
+### Task 8: Create Pie Charts Component
+
+**Files:**
+- Create: `LIFF/app/components/dashboard/PieChartSection.tsx`
+
+**Step 1: Write the Pie Charts component**
+
+```typescript
+'use client'
+
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+
+interface PieChartSectionProps {
+  byCategory: Array<{ name: string; value: number }>
+  bySubCategory: Array<{ name: string; value: number }>
+}
+
+const COLORS = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#ec4899', '#000000']
+
+export default function PieChartSection({ byCategory, bySubCategory }: PieChartSectionProps) {
+  return (
+    <div className="grid grid-cols-2 gap-4 mb-6">
+      {/* Equipment Distribution Pie Chart */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">สัดส่วนอุปกรณ์/ประเภท</h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <PieChart>
+            <Pie
+              data={byCategory}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+              outerRadius={70}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {byCategory.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Tasks Distribution Pie Chart */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">สัดส่วนงาน/ประเภท</h3>
+        <ResponsiveContainer width="100%" height={200}>
+          <PieChart>
+            <Pie
+              data={bySubCategory.slice(0, 5)}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+              outerRadius={70}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {bySubCategory.slice(0, 5).map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+```
+
+**Step 2: Commit**
+
+```bash
+git add app/components/dashboard/PieChartSection.tsx
+git commit -m "feat: add dashboard Pie Charts component"
+```
+
+---
+
+### Task 9: Create Data Table Component
+
+**Files:**
+- Create: `LIFF/app/components/dashboard/DataTable.tsx`
+
+**Step 1: Write the Data Table component**
+
+```typescript
+'use client'
+
 interface Ticket {
   message_id: string
+  created_date: string
   subject: string
-  status: string
+  fromuser: string
+  branch_name: string
   category: string
   sub_category: string
-  branch_name: string
-  created_date: string
+  status: string
 }
 
-interface TicketCardProps {
-  ticket: Ticket
+interface DataTableProps {
+  tickets: Ticket[]
+  total: number
+  page: number
+  pageSize: number
+  onPageChange: (page: number) => void
 }
 
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  assigned: 'bg-blue-100 text-blue-800',
-  closed: 'bg-green-100 text-green-800',
-  unsent: 'bg-gray-100 text-gray-800'
-}
+export default function DataTable({ tickets, total, page, pageSize, onPageChange }: DataTableProps) {
+  const startIndex = (page - 1) * pageSize + 1
+  const endIndex = Math.min(page * pageSize, total)
 
-const statusLabels: Record<string, string> = {
-  pending: 'รอดำเนินการ',
-  assigned: 'มอบหมายแล้ว',
-  closed: 'เสร็จสิ้น',
-  unsent: 'ยกเลิก'
-}
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'closed': return 'bg-green-100 text-green-800'
+      case 'assigned': return 'bg-yellow-100 text-yellow-800'
+      case 'pending': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
 
-export function TicketCard({ ticket }: TicketCardProps) {
-  const colorClass = statusColors[ticket.status] || statusColors.pending
-  const statusLabel = statusLabels[ticket.status] || ticket.status
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'closed': return 'เสร็จสิ้น'
+      case 'assigned': return 'ดำเนินการ'
+      case 'pending': return 'รอดำเนินการ'
+      default: return status
+    }
+  }
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-'
     const date = new Date(dateStr)
-    return date.toLocaleDateString('th-TH', {
-      day: '2-digit',
-      month: 'short',
-      year: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    return date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-900 flex-1">{ticket.subject || '(ไม่ระบุหัวข้อ)'}</h3>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-          {statusLabel}
-        </span>
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ลำดับ</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อ</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">แผนก/หน่วยงาน</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ประเภทอุปกรณ์</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {tickets.map((ticket, index) => (
+              <tr key={ticket.message_id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {startIndex + index}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                  {formatDate(ticket.created_date)}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-900">
+                  {ticket.fromuser || '-'}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-900">
+                  {ticket.branch_name || '-'}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-900">
+                  {ticket.category || '-'}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
+                    {getStatusText(ticket.status)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <div className="space-y-1 text-sm text-gray-600">
-        <div className="flex items-center space-x-2">
-          <span>📂</span>
-          <span>{ticket.category} - {ticket.sub_category}</span>
+
+      {/* Pagination */}
+      <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200">
+        <div className="text-sm text-gray-700">
+          {startIndex} - {endIndex} ของ {total}
         </div>
-        <div className="flex items-center space-x-2">
-          <span>🏢</span>
-          <span>{ticket.branch_name}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span>📅</span>
-          <span>{formatDate(ticket.created_date)}</span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            ◀
+          </button>
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={endIndex >= total}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            ▶
+          </button>
         </div>
       </div>
     </div>
@@ -302,438 +1015,319 @@ export function TicketCard({ ticket }: TicketCardProps) {
 **Step 2: Commit**
 
 ```bash
-cd LIFF
-git add app/components/TicketCard.tsx
-git commit -m "feat: add TicketCard component"
+git add app/components/dashboard/DataTable.tsx
+git commit -m "feat: add dashboard Data Table component with pagination"
 ```
 
 ---
 
-## Task 6: Create TicketList component
+## Main Dashboard Page
+
+### Task 10: Update Main Page Component
 
 **Files:**
-- Create: `LIFF/app/components/TicketList.tsx`
+- Modify: `LIFF/app/page.tsx`
 
-**Step 1: Create TicketList component**
+**Step 1: Replace the entire page.tsx with Dashboard**
 
-Create file `LIFF/app/components/TicketList.tsx`:
-```typescript
-import { TicketCard } from './TicketCard'
-
-interface Ticket {
-  message_id: string
-  subject: string
-  status: string
-  category: string
-  sub_category: string
-  branch_name: string
-  created_date: string
-}
-
-interface TicketListProps {
-  tickets: Ticket[]
-}
-
-export function TicketList({ tickets }: TicketListProps) {
-  if (tickets.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p>ยังไม่มีปัญหาที่แจ้ง</p>
-        <p className="text-sm mt-2">คลิก "+ สร้างปัญหาใหม่" เพื่อเริ่มต้น</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-3">
-      {tickets.map(ticket => (
-        <TicketCard key={ticket.message_id} ticket={ticket} />
-      ))}
-    </div>
-  )
-}
-```
-
-**Step 2: Commit**
-
-```bash
-cd LIFF
-git add app/components/TicketList.tsx
-git commit -m "feat: add TicketList component"
-```
-
----
-
-## Task 7: Create RefreshButton component
-
-**Files:**
-- Create: `LIFF/app/components/RefreshButton.tsx`
-
-**Step 1: Create RefreshButton component**
-
-Create file `LIFF/app/components/RefreshButton.tsx`:
-```typescript
-interface RefreshButtonProps {
-  onRefresh: () => void
-  loading: boolean
-  lastUpdate: Date | null
-}
-
-export function RefreshButton({ onRefresh, loading, lastUpdate }: RefreshButtonProps) {
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('th-TH', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  return (
-    <div className="flex items-center justify-between">
-      {lastUpdate && (
-        <span className="text-sm text-gray-500">
-          🔄 อัปเดตล่าสุด: {formatTime(lastUpdate)}
-        </span>
-      )}
-      <button
-        onClick={onRefresh}
-        disabled={loading}
-        className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
-          loading
-            ? 'bg-gray-300 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700'
-        } text-white transition-colors`}
-      >
-        <span>{loading ? '⏳' : '🔄'}</span>
-        <span>{loading ? 'กำลังโหลด...' : 'รีเฟรช'}</span>
-      </button>
-    </div>
-  )
-}
-```
-
-**Step 2: Commit**
-
-```bash
-cd LIFF
-git add app/components/RefreshButton.tsx
-git commit -m "feat: add RefreshButton component"
-```
-
----
-
-## Task 8: Create Dashboard page
-
-**Files:**
-- Create: `LIFF/app/page.tsx`
-
-**Step 1: Create Dashboard page**
-
-Create file `LIFF/app/page.tsx`:
 ```typescript
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useLiff } from '@/components/LiffProvider'
-import { KPICard } from '@/components/KPICard'
-import { TicketList } from '@/components/TicketList'
-import { RefreshButton } from '@/components/RefreshButton'
-import { useRouter } from 'next/navigation'
+import Header from './components/dashboard/Header'
+import KPICards from './components/dashboard/KPICards'
+import BarChartSection from './components/dashboard/BarChartSection'
+import PieChartSection from './components/dashboard/PieChartSection'
+import DataTable from './components/dashboard/DataTable'
 
-const LAST_SYNC_KEY = 'liff_last_sync'
-const SYNC_INTERVAL = 24 * 60 * 60 * 1000  // 24 hours
+interface Stats {
+  equipmentCount: number
+  taskCount: number
+  toolsCount: number
+}
 
-interface KPI {
-  total: number
-  closed: number
+interface ChartData {
+  byCategory: Array<{ name: string; value: number }>
+  bySubCategory: Array<{ name: string; value: number }>
 }
 
 interface Ticket {
   message_id: string
+  created_date: string
   subject: string
-  status: string
+  fromuser: string
+  branch_name: string
   category: string
   sub_category: string
-  branch_name: string
-  created_date: string
+  status: string
 }
 
 interface TicketsResponse {
-  kpi: KPI
-  tickets: Ticket[]
+  items: Ticket[]
+  total: number
+  page: number
+  pageSize: number
 }
 
 export default function DashboardPage() {
-  const { profile, loading } = useLiff()
-  const router = useRouter()
-  const [data, setData] = useState<TicketsResponse | null>(null)
-  const [fetching, setFetching] = useState(false)
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  // Filter states
+  const [status, setStatus] = useState<string>('all')
+  const [branchCompany, setBranchCompany] = useState<string>('all')
+  const [showCalendar, setShowCalendar] = useState<boolean>(false)
 
-  const fetchTickets = async () => {
-    if (!profile?.userId) return
+  // Date range state
+  const currentYear = new Date().getFullYear()
+  const currentMonth = new Date().getMonth() + 1
+  const currentQuarter = Math.ceil(currentMonth / 3)
 
-    setFetching(true)
-    try {
-      const response = await fetch(`/api/tickets?userId=${profile.userId}`)
-      if (response.ok) {
-        const result = await response.json()
-        setData(result)
-        setLastUpdate(new Date())
-        localStorage.setItem(LAST_SYNC_KEY, Date.now().toString())
-      }
-    } catch (error) {
-      console.error('Fetch error:', error)
-    } finally {
-      setFetching(false)
-    }
+  const [dateRange, setDateRange] = useState({
+    year: currentYear,
+    quarter: currentQuarter,
+    month: currentMonth,
+  })
+
+  // Data states
+  const [stats, setStats] = useState<Stats>({ equipmentCount: 0, taskCount: 0, toolsCount: 0 })
+  const [charts, setCharts] = useState<ChartData>({ byCategory: [], bySubCategory: [] })
+  const [tickets, setTickets] = useState<TicketsResponse>({
+    items: [],
+    total: 0,
+    page: 1,
+    pageSize: 100,
+  })
+
+  // Loading states
+  const [loading, setLoading] = useState(true)
+
+  // Build query params
+  const getStartDate = () => {
+    const startMonth = dateRange.quarter ? (dateRange.quarter - 1) * 3 + 1 : 1
+    const month = dateRange.month || startMonth
+    return new Date(dateRange.year, month - 1, 1).toISOString()
   }
 
-  useEffect(() => {
-    if (!loading && profile?.userId) {
-      const lastSync = localStorage.getItem(LAST_SYNC_KEY)
-      const now = Date.now()
+  const getEndDate = () => {
+    if (dateRange.month) {
+      return new Date(dateRange.year, dateRange.month, 0).toISOString()
+    }
+    const endMonth = dateRange.quarter ? dateRange.quarter * 3 : 12
+    return new Date(dateRange.year, endMonth, 0).toISOString()
+  }
 
-      if (!lastSync || (now - parseInt(lastSync)) > SYNC_INTERVAL) {
-        fetchTickets()
-      } else {
-        setLastUpdate(new Date(parseInt(lastSync)))
+  // Fetch all data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      const startDate = getStartDate()
+      const endDate = getEndDate()
+
+      try {
+        // Fetch stats
+        const statsRes = await fetch(
+          `/api/dashboard/stats?startDate=${startDate}&endDate=${endDate}&status=${status}&branchCompany=${branchCompany}`
+        )
+        const statsData = await statsRes.json()
+        setStats(statsData)
+
+        // Fetch charts
+        const chartsRes = await fetch(
+          `/api/dashboard/charts?startDate=${startDate}&endDate=${endDate}&status=${status}&branchCompany=${branchCompany}`
+        )
+        const chartsData = await chartsRes.json()
+        setCharts(chartsData)
+
+        // Fetch tickets (reset to page 1 when filters change)
+        const ticketsRes = await fetch(
+          `/api/dashboard/tickets?page=1&pageSize=100&startDate=${startDate}&endDate=${endDate}&status=${status}&branchCompany=${branchCompany}`
+        )
+        const ticketsData = await ticketsRes.json()
+        setTickets(ticketsData)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
       }
     }
-  }, [loading, profile])
+
+    fetchData()
+  }, [status, branchCompany, dateRange])
+
+  // Handle page change
+  const handlePageChange = async (newPage: number) => {
+    const startDate = getStartDate()
+    const endDate = getEndDate()
+
+    const ticketsRes = await fetch(
+      `/api/dashboard/tickets?page=${newPage}&pageSize=100&startDate=${startDate}&endDate=${endDate}&status=${status}&branchCompany=${branchCompany}`
+    )
+    const ticketsData = await ticketsRes.json()
+    setTickets(ticketsData)
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-4xl mb-4">⏳</div>
-          <p>กำลังโหลด...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">กำลังโหลด...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900">🏠 IT Helpdesk</h1>
-          {profile && (
-            <p className="text-sm text-gray-600">👤 {profile.displayName}</p>
-          )}
-        </div>
-      </div>
+      <Header
+        status={status}
+        setStatus={setStatus}
+        branchCompany={branchCompany}
+        setBranchCompany={setBranchCompany}
+        showCalendar={showCalendar}
+        setShowCalendar={setShowCalendar}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+      />
 
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      {/* Main Content */}
+      <div className="max-w-full mx-auto px-4 py-6">
         {/* KPI Cards */}
-        {data && (
-          <div className="grid grid-cols-2 gap-4">
-            <KPICard label="ทั้งหมด" value={data.kpi.total} icon="🎫" />
-            <KPICard label="เสร็จสิ้น" value={data.kpi.closed} icon="✅" />
-          </div>
-        )}
-
-        {/* Refresh Bar */}
-        <RefreshButton
-          onRefresh={fetchTickets}
-          loading={fetching}
-          lastUpdate={lastUpdate}
+        <KPICards
+          equipmentCount={stats.equipmentCount}
+          taskCount={stats.taskCount}
+          toolsCount={stats.toolsCount}
         />
 
-        {/* Ticket List */}
-        {data ? (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              🎫 ปัญหาล่าสุดของฉัน
-            </h2>
-            <TicketList tickets={data.tickets} />
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <p>กำลังโหลดข้อมูล...</p>
-          </div>
-        )}
-      </div>
+        {/* Charts */}
+        <BarChartSection byCategory={charts.byCategory} bySubCategory={charts.bySubCategory} />
+        <PieChartSection byCategory={charts.byCategory} bySubCategory={charts.bySubCategory} />
 
-      {/* Floating Action Button */}
-      <button
-        onClick={() => router.push('/create')}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg text-2xl"
-      >
-        +
-      </button>
+        {/* Data Table */}
+        <DataTable
+          tickets={tickets.items}
+          total={tickets.total}
+          page={tickets.page}
+          pageSize={tickets.pageSize}
+          onPageChange={handlePageChange}
+        />
+      </div>
     </div>
   )
 }
 ```
 
-**Step 2: Commit**
+**Step 2: Test the Dashboard**
+
+Run: `npm run dev`
+
+Visit: `http://localhost:3000`
+
+Expected: Dashboard with header, KPI cards, charts, and table displaying data from SQL Server
+
+**Step 3: Commit**
 
 ```bash
-cd LIFF
 git add app/page.tsx
-git commit -m "feat: add Dashboard page with auto-sync"
+git commit -m "feat: implement main dashboard page with all components"
 ```
 
 ---
 
-## Task 9: Update types
+## Tailwind Configuration
+
+### Task 11: Update Tailwind Config
 
 **Files:**
-- Modify: `LIFF/app/types/index.ts`
+- Modify: `LIFF/tailwind.config.js`
 
-**Step 1: Add ticket types to types file**
+**Step 1: Add custom colors**
 
-Edit `LIFF/app/types/index.ts`, add at the end:
-```typescript
-export interface Ticket {
-  message_id: string
-  subject: string
-  status: 'pending' | 'assigned' | 'closed' | 'unsent'
-  category: string
-  sub_category: string
-  branch_name: string
-  created_date: string
+```javascript
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        'header-yellow': '#FBBF24',
+        'chart-green': '#22c55e',
+      }
+    },
+  },
+  plugins: [],
 }
-
-export interface TicketsResponse {
-  kpi: {
-    total: number
-    closed: number
-  }
-  tickets: Ticket[]
-}
 ```
 
 **Step 2: Commit**
 
 ```bash
-cd LIFF
-git add app/types/index.ts
-git commit -m "feat: add ticket types"
+git add tailwind.config.js
+git commit -m "style: add custom colors for dashboard"
 ```
 
 ---
 
-## Task 10: Update documentation
+## Testing
 
-**Files:**
-- Modify: `LIFF/README.md`
+### Task 12: Manual Testing
 
-**Step 1: Update README with Dashboard info**
+**Step 1: Test all filters**
 
-Edit `LIFF/README.md`, update Project Structure section:
-```markdown
-## Project Structure
+1. Status filter - test each option (all, pending, assigned, closed)
+2. Branch filter - test each option (all, Branch SPR, Branch Franchise)
+3. Date filter - test year, quarter, month selection
 
-```
-LIFF/
-├── app/                    # Next.js App Router pages
-│   ├── create/            # Ticket creation page
-│   ├── page.tsx           # Dashboard page (KPI + ticket list)
-│   ├── api/               # API routes
-│   │   └── tickets/       # Tickets API endpoint
-│   ├── components/        # Reusable components
-│   │   ├── CategorySelect.tsx
-│   │   ├── BranchSelect.tsx
-│   │   ├── ImageUpload.tsx
-│   │   ├── KPICard.tsx
-│   │   ├── TicketCard.tsx
-│   │   ├── TicketList.tsx
-│   │   ├── LiffProvider.tsx
-│   │   ├── TicketForm.tsx
-│   │   └── ui/           # shadcn/ui components
-│   └── types/            # TypeScript type definitions
-└── tests/                # Component tests
-```
+**Step 2: Test pagination**
 
-## Features
+1. Click next/previous buttons
+2. Verify data changes correctly
+3. Verify page counter updates
 
-- **Dashboard (`/`)**: View ticket statistics (Total, Closed) and recent tickets with auto-sync
-- **Create Ticket (`/create`)**: Submit new IT helpdesk tickets
-```
+**Step 3: Test responsive design**
 
-**Step 2: Commit**
+1. Resize browser window
+2. Verify layout adapts correctly
 
-```bash
-cd LIFF
-git add README.md
-git commit -m "docs: update README with Dashboard info"
-```
+**Step 4: Fix any issues found**
 
 ---
 
-## Task 11: Update LIFF AGENTS.md version
+## Completion
 
-**Files:**
-- Modify: `LIFF/AGENTS.md`
+### Task 13: Final Review and Documentation
 
-**Step 1: Update version and features**
+**Step 1: Verify all features work**
 
-Edit `LIFF/AGENTS.md`, update:
-```markdown
-> **Version**: 1.2.0
-```
+- [ ] Header displays with filters
+- [ ] KPI cards show correct numbers
+- [ ] Bar charts render with data
+- [ ] Pie charts render with data
+- [ ] Table displays tickets with pagination
+- [ ] Filters work correctly
+- [ ] Date picker opens and closes
 
-Add to Core Features:
-```markdown
-* **Feature 2: Dashboard Page (/)**: Shows KPI Cards (Total, Closed) and a list of user's recent tickets with auto-sync every 24 hours.
-```
-
-**Step 2: Commit**
+**Step 2: Final commit**
 
 ```bash
-cd LIFF
-git add AGENTS.md
-git commit -m "docs: update AGENTS.md to v1.2.0 with Dashboard feature"
-```
-
----
-
-## Task 12: Final verification
-
-**Files:**
-- None (verification only)
-
-**Step 1: Run development server**
-
-Run: `cd LIFF && npm run dev`
-Expected: Server starts at http://localhost:3000
-
-**Step 2: Test Dashboard**
-
-1. Open http://localhost:3000
-2. Should see Dashboard with:
-   - Header with "🏠 IT Helpdesk"
-   - KPI cards (Total, Closed)
-   - Refresh button with timestamp
-   - Ticket list or empty state
-   - Floating + button
-
-**Step 3: Test auto-sync**
-
-1. Check LocalStorage for `liff_last_sync`
-2. Reload page after 24h (or manually clear storage)
-3. Should auto-fetch data
-
-**Step 4: Test API**
-
-Run: `curl "http://localhost:3000/api/tickets?userId=U1234567890"`
-Expected: JSON response with kpi and tickets
-
-**Step 5: Final commit (if any fixes needed)**
-
-```bash
-cd LIFF
 git add .
-git commit -m "fix: [description of fix]"
+git commit -m "feat: complete dashboard UI implementation
+
+- Add all API routes (stats, charts, tickets)
+- Implement dashboard components (Header, KPICards, Charts, Table)
+- Add Recharts integration for data visualization
+- Implement filtering by status, branch, and date range
+- Add pagination for ticket table
+- Style with Tailwind CSS to match reference UI"
 ```
 
 ---
 
 ## Notes
 
-- Database name `[YourDatabase]` in queries must be replaced with actual database name
-- SQL credentials must be set in `.env.local`
-- For development without SQL, the API will return errors - this is expected
-- The Dashboard uses mock LIFF profile in development mode (already in LiffProvider)
+- All API routes use SQL Server connection from environment variables
+- Date handling uses JavaScript Date with Thai locale formatting
+- Charts use Recharts library for responsive visualization
+- Components are Client Components to support interactivity
+- Filter changes trigger data reload
+- Calendar popup is a custom component for Year/Quarter/Month selection
