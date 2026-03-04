@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year')
 
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
-  const startDate = new Date(currentYear, 0, 1)
-  const endDate = new Date(currentYear, 11, 31, 23, 59, 59)
+  const startDate = new Date(currentYear, 0, 1).toISOString()
+  const endDate = new Date(currentYear, 11, 31, 23, 59, 59).toISOString()
 
   let pool: sql.ConnectionPool | null = null
 
@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
 
     // Get monthly totals
     const monthlyResult = await pool.request()
-      .input('startDate', sql.DateTime(startDate))
-      .input('endDate', sql.DateTime(endDate))
+      .input('startDate', sql.DateTime, startDate)
+      .input('endDate', sql.DateTime, endDate)
       .query(`
         SELECT
           MONTH(created_date) as month,

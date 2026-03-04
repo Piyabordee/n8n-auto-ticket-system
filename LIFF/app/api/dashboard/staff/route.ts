@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
   const startMonth = month ? parseInt(month) : 1
   const endMonth = month ? parseInt(month) : 12
 
-  const startDate = new Date(currentYear, startMonth - 1, 1)
-  const endDate = new Date(currentYear, endMonth, 0, 23, 59, 59)
+  const startDate = new Date(currentYear, startMonth - 1, 1).toISOString()
+  const endDate = new Date(currentYear, endMonth, 0, 23, 59, 59).toISOString()
 
   let pool: sql.ConnectionPool | null = null
 
@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
 
     // Get staff performance stats
     const staffResult = await pool.request()
-      .input('startDate', sql.DateTime(startDate))
-      .input('endDate', sql.DateTime(endDate))
+      .input('startDate', sql.DateTime, startDate)
+      .input('endDate', sql.DateTime, endDate)
       .query(`
         SELECT
           assigned_to,
