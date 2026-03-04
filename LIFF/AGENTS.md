@@ -1,6 +1,6 @@
 # IT Helpdesk LIFF App - Project Context
 
-> **Version**: 1.1.0
+> **Version**: 1.2.0
 > **Purpose**: Frontend web application using LINE Front-end Framework (LIFF) for submitting and tracking IT Helpdesk tickets, including image attachments.
 > **Integration**: LIFF SDK + Next.js + n8n Webhook + Microsoft SQL Server
 
@@ -10,15 +10,17 @@
 * **Styling**: Tailwind CSS
 * **UI Components**: shadcn/ui (for fast, clean enterprise UI)
 * **LINE SDK**: @line/liff
+* **Database Client**: mssql (SQL Server)
 
 ## 2. System Architecture
 1. **Frontend (Next.js)**: Runs inside LINE App via LIFF. Handles UI/UX, authenticates user via `liff.init()`, gets `userId` and `displayName`, and converts image uploads to Base64.
-2. **API/Middleware (n8n)**: Frontend sends POST request to existing n8n webhook (Auto_Ticket_1.7).
-3. **Database**: Microsoft SQL Server `[Dev_Born].[dbo].[ticket]`.
+2. **API Routes (Next.js)**: Dashboard queries SQL Server directly via `/api/tickets` endpoint using mssql package.
+3. **API/Middleware (n8n)**: Frontend sends POST request to existing n8n webhook (Auto_Ticket_1.7) for ticket creation.
+4. **Database**: Microsoft SQL Server `[YourDatabase].[dbo].[ticket]`.
 
 ## 3. Core Features to Build
 * **Feature 1: LIFF Initialization Provider**: A global context that initializes LIFF and stores user profile data globally. Must support mock data for local development.
-* **Feature 2: Dashboard Page (/)**: Shows KPI Cards (Total, Pending, Closed) and a list of user's recent tickets.
+* **Feature 2: Dashboard Page (/)**: Shows KPI Cards (Total, Closed) and a list of user's recent tickets with auto-sync every 24 hours.
 * **Feature 3: Create Ticket Form (/create)**: A form capturing Category, Sub-category, Branch, Problem details, and an Image Upload field with preview capability.
 
 ## 4. Integration Endpoints
