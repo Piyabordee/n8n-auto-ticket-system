@@ -1,135 +1,121 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useLiff } from '@/components/LiffProvider'
-import { KPICard } from '@/components/KPICard'
-import { TicketList } from '@/components/TicketList'
-import { RefreshButton } from '@/components/RefreshButton'
-import { useRouter } from 'next/navigation'
+import HeaderFilter from './components/dashboard/HeaderFilter'
+import KPICards from './components/dashboard/KPICards'
+import MonthlyBarChart from './components/dashboard/MonthlyBarChart'
+import StaffPerformanceTable from './components/dashboard/StaffPerformanceTable'
 
-const LAST_SYNC_KEY = 'liff_last_sync'
-const SYNC_INTERVAL = 24 * 60 * 60 * 1000  // 24 hours
+interface KPIStats {
+  total: number
+  closed: number
+  closeRate: number
+  avgTime: number
+  pending: number
+}
 
-interface KPI {
+interface MonthlyData {
+  month: string
   total: number
   closed: number
 }
 
-interface Ticket {
-  message_id: string
-  subject: string
-  status: string
-  category: string
-  sub_category: string
-  branch_name: string
-  created_date: string
+interface StaffData {
+  rank: number
+  name: string
+  totalAssigned: number
+  totalClosed: number
+  avgTime: number
 }
 
-interface TicketsResponse {
-  kpi: KPI
-  tickets: Ticket[]
-}
+export default function TeamKPIDashboard() {
+  // Filter states
+  const currentYear = new Date().getFullYear()
+  const [year, setYear] = useState(currentYear)
+  const [month, setMonth] = useState<number | null>(null)
 
-export default function DashboardPage() {
-  const { profile, loading } = useLiff()
-  const router = useRouter()
-  const [data, setData] = useState<TicketsResponse | null>(null)
-  const [fetching, setFetching] = useState(false)
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  // Data states
+  const [kpi, setKpi] = useState<KPIStats>({
+    total: 0,
+    closed: 0,
+    closeRate: 0,
+    avgTime: 0,
+    pending: 0
+  })
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
+  const [staffData, setStaffData] = useState<StaffData[]>([])
 
-  const fetchTickets = async () => {
-    if (!profile?.userId) return
+  // Loading state
+  const [loading, setLoading] = useState(true)
 
-    setFetching(true)
-    try {
-      const response = await fetch(`/api/tickets?userId=${profile.userId}`)
-      if (response.ok) {
-        const result = await response.json()
-        setData(result)
-        setLastUpdate(new Date())
-        localStorage.setItem(LAST_SYNC_KEY, Date.now().toString())
-      }
-    } catch (error) {
-      console.error('Fetch error:', error)
-    } finally {
-      setFetching(false)
-    }
-  }
-
+  // Fetch all dashboard data
   useEffect(() => {
-    if (!loading && profile?.userId) {
-      const lastSync = localStorage.getItem(LAST_SYNC_KEY)
-      const now = Date.now()
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        // Build query params
+        const monthParam = month ? `&month=${month}` : ''
+        const yearParam = `year=${year}`
 
-      if (!lastSync || (now - parseInt(lastSync)) > SYNC_INTERVAL) {
-        fetchTickets()
-      } else {
-        setLastUpdate(new Date(parseInt(lastSync)))
+        // Fetch KPI stats
+        const kpiRes = await fetch(`/api/dashboard/kpi?${yearParam}${monthParam}`)
+        const kpiData = await kpiRes.json()
+        setKpi(kpiData)
+
+        // Fetch monthly data (always for the selected year)
+        const monthlyRes = await fetch(`/api/dashboard/monthly?${yearParam}`)
+        const monthlyData = await monthlyRes.json()
+        setMonthlyData(monthlyData.data)
+
+        // Fetch staff performance
+        const staffRes = await fetch(`/api/dashboard/staff?${yearParam}${monthParam}`)
+        const staffData = await staffRes.json()
+        setStaffData(staffData.staff)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
       }
     }
-  }, [loading, profile])
+
+    fetchData()
+  }, [year, month])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-4xl mb-4">⏳</div>
-          <p>กำลังโหลด...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">กำลังโหลดข้อมูล...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900">🏠 IT Helpdesk</h1>
-          {profile && (
-            <p className="text-sm text-gray-600">👤 {profile.displayName}</p>
-          )}
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with Filters */}
+      <HeaderFilter
+        year={year}
+        setYear={setYear}
+        month={month}
+        setMonth={setMonth}
+      />
 
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
         {/* KPI Cards */}
-        {data && (
-          <div className="grid grid-cols-2 gap-4">
-            <KPICard label="ทั้งหมด" value={data.kpi.total} icon="🎫" />
-            <KPICard label="เสร็จสิ้น" value={data.kpi.closed} icon="✅" />
-          </div>
-        )}
-
-        {/* Refresh Bar */}
-        <RefreshButton
-          onRefresh={fetchTickets}
-          loading={fetching}
-          lastUpdate={lastUpdate}
+        <KPICards
+          total={kpi.total}
+          closed={kpi.closed}
+          closeRate={kpi.closeRate}
+          avgTime={kpi.avgTime}
+          pending={kpi.pending}
         />
 
-        {/* Ticket List */}
-        {data ? (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              🎫 ปัญหาล่าสุดของฉัน
-            </h2>
-            <TicketList tickets={data.tickets} />
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <p>กำลังโหลดข้อมูล...</p>
-          </div>
-        )}
-      </div>
+        {/* Monthly Bar Chart */}
+        <MonthlyBarChart data={monthlyData} />
 
-      {/* Floating Action Button */}
-      <button
-        onClick={() => router.push('/create')}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg text-2xl"
-      >
-        +
-      </button>
+        {/* Staff Performance Table */}
+        <StaffPerformanceTable staff={staffData} />
+      </div>
     </div>
   )
 }
