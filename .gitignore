@@ -5,7 +5,6 @@ Thumbs.db
 # n8n specific (if running locally/npm)
 node_modules
 .env
-.n8n/
 *.log
 
 # Editor
@@ -19,7 +18,8 @@ node_modules
 # Local Documentation
 GITHUB_PUBLISH_GUIDE.md
 CLAUDE.md
-RESTORE_GUIDE.md
 
 # Sanitizer - Local sensitive data only
+LIFF/.env
 .env.sanitizer
+SQL/SQLQuery.sql
