@@ -6,7 +6,7 @@ const config = {
   user: process.env.SQL_USER || '',
   password: process.env.SQL_PASSWORD || '',
   options: {
-    encrypt: true,
+    encrypt: false, // Disable encryption for Node.js 18 compatibility
     trustServerCertificate: true
   }
 }

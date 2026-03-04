@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       .input('userId', sql.VarChar(50), userId)
       .query(`
         SELECT COUNT(*) as total
-        FROM [YourDatabase].[dbo].[ticket]
+        FROM [Dev_Born].[dbo].[ticket]
         WHERE userid = @userId
       `)
     const total = totalResult.recordset[0].total
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       .input('userId', sql.VarChar(50), userId)
       .query(`
         SELECT COUNT(*) as closed
-        FROM [YourDatabase].[dbo].[ticket]
+        FROM [Dev_Born].[dbo].[ticket]
         WHERE userid = @userId AND status = 'closed'
       `)
     const closed = closedResult.recordset[0].closed
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         SELECT TOP 20
           message_id, subject, status, category,
           sub_category, branch_name, created_date
-        FROM [YourDatabase].[dbo].[ticket]
+        FROM [Dev_Born].[dbo].[ticket]
         WHERE userid = @userId
         ORDER BY created_date DESC
       `)

@@ -26,8 +26,8 @@ export function LiffProvider({ children }: { children: React.ReactNode }) {
         // Mock data for local development
         if (process.env.NODE_ENV === 'development') {
           setProfile({
-            userId: 'U1234567890',
-            displayName: 'Test User',
+            userId: 'U11ffef7226ca75c66fb4c0af4af00dc6', // ธัญญ์นรี
+            displayName: 'ธัญญ์นรี เก๋ 4289',
             pictureUrl: 'https://example.com/avatar.png'
           })
           setLoading(false)
