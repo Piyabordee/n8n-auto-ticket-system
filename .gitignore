@@ -24,3 +24,4 @@ RESTORE_GUIDE.md
 # Sanitizer - Local sensitive data only
 .env.sanitizer
 SQL/SQLQuery.sql
+.env.sql
