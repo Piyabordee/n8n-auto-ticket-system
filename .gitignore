@@ -25,3 +25,5 @@ RESTORE_GUIDE.md
 .env.sanitizer
 SQL/SQLQuery.sql
 .env.sql
+create_tables.sql
+*.csv

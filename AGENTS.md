@@ -278,17 +278,20 @@ Start → SELECT TOP (1) by message_id → Set Insert Log → INSERT into [log] 
 | branch_name | VARCHAR | Branch name |
 | branch_company | VARCHAR | Company/Franchise |
 | subject | VARCHAR | Email subject |
-| clean_text, raw_text | NVARCHAR | Message text |
+| clean_text | NVARCHAR | Cleaned message text |
+| raw_text | NVARCHAR | Raw message text |
 | email_body | NVARCHAR | Email content |
 | chatname | VARCHAR | Group/Room name |
 | fromuser | VARCHAR | Sender display name |
 | userid | VARCHAR | LINE user ID |
 | groupid | VARCHAR | LINE group ID |
+| created_date | DATETIME | Created timestamp |
+| updated_date | DATETIME | Updated timestamp |
+| created_by | VARCHAR | Created by |
+| updated_by | VARCHAR | Updated by |
 | **close_cause** | NVARCHAR | Problem symptom |
 | **close_reason** | NVARCHAR | Resolution |
 | **close_time_minute** | INT | Minutes from assigned to closed |
-| created_date, updated_date | DATETIME | Timestamps |
-| created_by, updated_by | VARCHAR | Audit fields |
 
 ### Table: [YourDatabase].[dbo].[log]
 
