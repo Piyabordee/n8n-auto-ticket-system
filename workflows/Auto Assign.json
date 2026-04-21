@@ -1,5 +1,5 @@
 {
-  "name": "Auto Assign 1.2",
+  "name": "Auto Assign 1.2.1",
   "nodes": [
     {
       "parameters": {
@@ -30,7 +30,7 @@
       "typeVersion": 2.3,
       "position": [
         6016,
-        1824
+        2000
       ],
       "id": "0117606c-9722-452f-b222-1eb34d9aad8c",
       "name": "If Reply"
@@ -63,8 +63,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        6480,
-        1776
+        6688,
+        2000
       ],
       "id": "3e9375eb-77a4-426a-9daa-96dadc6f7deb",
       "name": "If notEmpty"
@@ -84,7 +84,7 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        6800,
+        6464,
         1760
       ],
       "id": "e83f02d2-eef4-4d01-9dc4-d50d92cd7520",
@@ -100,36 +100,6 @@
         }
       },
       "disabled": true
-    },
-    {
-      "parameters": {
-        "operation": "get",
-        "dataTableId": {
-          "__rl": true,
-          "value": "qxjykIZZNaErzW0k",
-          "mode": "list",
-          "cachedResultName": "IT_Team",
-          "cachedResultUrl": "/projects/k123tPaALfk1YRzS/datatables/qxjykIZZNaErzW0k"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "userId",
-              "keyValue": "={{ $('Start').first().json.userId }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        6640,
-        1760
-      ],
-      "id": "5122ca79-0fdf-4953-b69e-a64eb2c44592",
-      "name": "Match IT Team",
-      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -204,19 +174,19 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "position": [
         5792,
-        1824
+        2000
       ]
     },
     {
       "parameters": {
-        "amount": 1,
+        "amount": 2,
         "unit": "minutes"
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        6176,
-        1760
+        6240,
+        2000
       ],
       "id": "6bdbf2a4-90a7-4300-b0d8-5c27a25d5b3f",
       "name": "Wait",
@@ -230,8 +200,8 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        6336,
-        1760
+        6464,
+        2000
       ],
       "id": "20a7cdec-3ff6-4971-9596-dc9beec027d9",
       "name": "Lookup Ticket",
@@ -249,7 +219,7 @@
           "value": "q3ybqMcKYHUTu4qg",
           "mode": "list",
           "cachedResultUrl": "/workflow/q3ybqMcKYHUTu4qg",
-          "cachedResultName": "LogSQLServer v1.0.1"
+          "cachedResultName": "LogSQLServer 1.0.1"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -333,8 +303,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        7184,
-        1760
+        7360,
+        2000
       ],
       "name": "Call LogSQLServer v1.0.0",
       "id": "1a3d374e-dcf5-4a9e-8f72-9de0b673eefc"
@@ -342,13 +312,13 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'assigned',\n    assigned_to = N'{{ $('Match IT Team').item.json.fromUser }}',\n    assigned_date = '{{ $('Start').first().json.datetime }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').item.json.fromUser }}'\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
+        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'assigned',\n    assigned_to = N'{{ $('Match IT Team').item.json.userId }}',\n    assigned_date = '{{ $('Start').first().json.datetime }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').item.json.userId }}'\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
       },
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        6992,
-        1760
+        7136,
+        2000
       ],
       "id": "344c4802-78d1-4701-8f9c-8ecaa5ce8090",
       "name": "Update Ticket Status",
@@ -358,6 +328,72 @@
           "name": "Microsoft SQL account"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "qxjykIZZNaErzW0k",
+          "mode": "list",
+          "cachedResultName": "IT_Team",
+          "cachedResultUrl": "/projects/k123tPaALfk1YRzS/datatables/qxjykIZZNaErzW0k"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "userId",
+              "keyValue": "={{ $('Start').first().json.userId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        6656,
+        1760
+      ],
+      "id": "5122ca79-0fdf-4953-b69e-a64eb2c44592",
+      "name": "Match IT Team (OLD)",
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT TOP 1 *\nFROM [YourDatabase].[dbo].[it_team]\nWHERE userId = '{{ $('Start').first().json.userId }}';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        6912,
+        2000
+      ],
+      "id": "3a040120-d877-4893-afca-8329b74287f5",
+      "name": "Match IT Team",
+      "credentials": {
+        "microsoftSql": {
+          "id": "YOUR_SQL_CREDENTIAL_ID",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "การส่งเมลเปิด Ticket แบบเก่า และ การ Match หา database it_team แบบเก่า(database n8n)",
+        "height": 256,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6416,
+        1680
+      ],
+      "typeVersion": 1,
+      "id": "f2a8a95a-c78a-4a08-8209-4c0411e0f4e0",
+      "name": "Sticky Note"
     }
   ],
   "pinData": {},
@@ -376,13 +412,7 @@
     },
     "Send email To DavMail": {
       "main": [
-        [
-          {
-            "node": "Update Ticket Status",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "If notEmpty": {
@@ -395,17 +425,6 @@
           }
         ],
         []
-      ]
-    },
-    "Match IT Team": {
-      "main": [
-        [
-          {
-            "node": "Send email To DavMail",
-            "type": "main",
-            "index": 0
-          }
-        ]
       ]
     },
     "Start": {
@@ -456,17 +475,34 @@
       "main": [
         []
       ]
+    },
+    "Match IT Team (OLD)": {
+      "main": [
+        []
+      ]
+    },
+    "Match IT Team": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "27ccc88c-8bd5-4f31-9cc4-38149a179c7b",
+  "versionId": "91f3c080-2900-4e69-96a7-455e4fe08a21",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"

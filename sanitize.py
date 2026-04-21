@@ -84,8 +84,11 @@ def build_sanitize_rules(config: Dict[str, str]) -> List[Tuple[str, str, bool]]:
             name = key.replace('PLACEHOLDER_', '')
             placeholders[name] = value
 
+    # Sort by value length (longest first) - ensure specific matches before partial ones
+    sorted_items = sorted(sanitize_items.items(), key=lambda x: len(x[1]), reverse=True)
+
     # สร้าง rules จากคู่ sanitize/placeholder
-    for name, real_value in sanitize_items.items():
+    for name, real_value in sorted_items:
         # หา placeholder ที่ตรงกัน
         placeholder = placeholders.get(name)
 
@@ -164,14 +167,11 @@ class Sanitizer:
     def sanitize_value(self, key: str, value: any, parent_key: str = '') -> any:
         """
         Sanitize individual values while preserving structure.
-        Preserves: node names, IDs, types, connections
-        Sanitizes: Database names, URLs, emails, company names in values
+        Preserves: node names, types (structural fields only)
+        Sanitizes: everything else via SANITIZE rules
         """
-        # Keys to preserve (never sanitize their values)
-        PRESERVE_KEYS = {
-            'id', 'name', 'type', 'webhookId', 'workflowId', 'instanceId',
-            'nodes', 'connections', 'position', 'parameters', 'credentials'
-        }
+        # Keys to preserve (only structural fields that never contain sensitive data)
+        PRESERVE_KEYS = {'name', 'type'}
 
         # If value is a dict, recurse
         if isinstance(value, dict):
@@ -186,19 +186,11 @@ class Sanitizer:
 
         # If value is a string, apply sanitization rules (with exceptions)
         elif isinstance(value, str):
-            # PRESERVE: Node names (name field at node level)
-            if key == 'name' and parent_key in ['', 'nodes']:
+            # PRESERVE: Node names and types only
+            if key in PRESERVE_KEYS:
                 return value
 
-            # PRESERVE: All ID fields, types, webhook paths
-            if key in PRESERVE_KEYS or 'id' in key.lower():
-                return value
-
-            # PRESERVE: n8n webhook paths (like /webhook/xxx-xxx-xxx)
-            if '/webhook/' in value or value.startswith('/') and value.count('/') > 1:
-                return value
-
-            # SANITIZE: Apply sanitization rules to other string values
+            # SANITIZE: Apply sanitization rules to all other string values
             return self.sanitize_text(value)
 
         # Return other types as-is

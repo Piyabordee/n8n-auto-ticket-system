@@ -1,5 +1,5 @@
 {
-  "name": "Auto Close Ticket 1.0",
+  "name": "Auto Close Ticket 1.2",
   "nodes": [
     {
       "parameters": {
@@ -28,10 +28,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        320,
-        -240
+        704,
+        -496
       ],
-      "id": "a561e0ee-2885-4af1-a075-53eeef1fc706",
+      "id": "fb2b34c3-26a0-403a-a6f6-708f16e884f4",
       "name": "If"
     },
     {
@@ -42,17 +42,19 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        528,
-        -336
+        928,
+        -496
       ],
-      "id": "f1c29437-4fb3-4724-bd74-7554dce0dabf",
+      "id": "f8f87d04-dff7-482a-99c1-a79b23e4986a",
       "name": "Microsoft SQL",
+      "alwaysOutputData": false,
       "credentials": {
         "microsoftSql": {
           "id": "YOUR_SQL_CREDENTIAL_ID",
           "name": "Microsoft SQL account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -82,10 +84,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        704,
-        -336
+        1152,
+        -496
       ],
-      "id": "4abb890a-63e6-46b9-896c-681f19987dd4",
+      "id": "39e70edb-0798-442f-9a75-a1bd53daa085",
       "name": "If notEmpty"
     },
     {
@@ -94,7 +96,7 @@
         "toEmail": "helpdesk@example.com",
         "subject": "={{ $('If notEmpty').item.json.subject }}",
         "emailFormat": "text",
-        "text": "={{ $('If notEmpty').item.json.email_body }}\n#assign {{ $json.email_spiceworks }}\n#set สาเหตุ={{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}\n#set การแก้ไขปัญหา={{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}\n#close",
+        "text": "={{ $('If notEmpty').item.json.email_body }}\n#set เวลาปิด Ticket={{ $now.toFormat('dd-MM-yyyy HH:mm:ss') }}\n#assign {{ $json.email_spiceworks }}\n#set สาเหตุ={{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}\n#set การแก้ไขปัญหา={{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*$)/)?.[1].trim() }}\n#close",
         "options": {
           "appendAttribution": false,
           "attachments": ""
@@ -103,10 +105,10 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1024,
-        -352
+        1824,
+        -496
       ],
-      "id": "3b2db305-addb-4a78-a8b7-13dd5b39e699",
+      "id": "3b3cb77c-f6ec-4aac-948b-e0f56273d453",
       "name": "Send email To DavMail",
       "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
       "retryOnFail": true,
@@ -121,46 +123,16 @@
     },
     {
       "parameters": {
-        "operation": "get",
-        "dataTableId": {
-          "__rl": true,
-          "value": "qxjykIZZNaErzW0k",
-          "mode": "list",
-          "cachedResultName": "IT_Team",
-          "cachedResultUrl": "/projects/k123tPaALfk1YRzS/datatables/qxjykIZZNaErzW0k"
-        },
-        "matchType": "allConditions",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "userId",
-              "keyValue": "={{ $('Start').item.json.userId }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.dataTable",
-      "typeVersion": 1,
-      "position": [
-        864,
-        -352
-      ],
-      "id": "00158425-0563-401b-ab2c-11b4e351436c",
-      "name": "Match IT Team",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'closed',\n    close_cause = N'{{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}',\n    close_reason = N'{{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').first().json.fromUser }}',\n    close_time_minute = CASE \n    WHEN DATEDIFF(MINUTE, assigned_date, GETDATE()) - 1 < 0 THEN 0 \n    ELSE DATEDIFF(MINUTE, assigned_date, GETDATE()) - 1 \nEND\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
+        "query": "UPDATE [YourDatabase].[dbo].[ticket]\nSET status = 'closed',\n    close_cause = N'{{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}',\n    close_reason = N'{{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}',\n    updated_date = GETDATE(),\n    updated_by = N'{{ $('Match IT Team').first().json.userId }}',\n    close_time_minute = CASE \n    WHEN DATEDIFF(MINUTE, created_date, GETDATE()) - 1 < 0 THEN 0 \n    ELSE DATEDIFF(MINUTE, created_date, GETDATE()) - 1 \nEND\nWHERE message_id = {{ $('Start').item.json.quotedMessageId }};"
       },
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        1216,
-        -352
+        2048,
+        -496
       ],
-      "id": "84d10e1f-b497-467e-8a6d-08c20bfb42bf",
+      "id": "4e0106ed-4c6e-4aed-8da5-35f21452b154",
       "name": "Update Ticket Status",
       "credentials": {
         "microsoftSql": {
@@ -176,7 +148,7 @@
           "value": "q3ybqMcKYHUTu4qg",
           "mode": "list",
           "cachedResultUrl": "/workflow/q3ybqMcKYHUTu4qg",
-          "cachedResultName": "LogSQLServer v1.0.1"
+          "cachedResultName": "LogSQLServer 1.0.1"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -260,11 +232,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        1408,
-        -352
+        2272,
+        -496
       ],
       "name": "Call LogSQLServer",
-      "id": "2fc0ff87-8e2e-4eca-aa00-dbb70e80c18f"
+      "id": "1bc3fd08-629e-43f8-b5d9-5206109f7ea3"
     },
     {
       "parameters": {
@@ -285,14 +257,220 @@
           ]
         }
       },
-      "id": "ce9566db-fb04-48f7-b736-9e3282eac2f4",
+      "id": "2f05e311-4d7c-4259-9faf-5ab02d3594a6",
       "typeVersion": 1.1,
       "name": "Start",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "position": [
-        112,
-        -240
+        480,
+        -496
       ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT TOP 1 *\nFROM [YourDatabase].[dbo].[it_team]\nWHERE userId = '{{ $('Start').first().json.userId }}';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        1376,
+        -496
+      ],
+      "id": "3e6184a2-be01-4bc5-bac0-6b8d66e4fc6c",
+      "name": "Match IT Team",
+      "credentials": {
+        "microsoftSql": {
+          "id": "YOUR_SQL_CREDENTIAL_ID",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Mgv2hXaEPDFGnErg",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Mgv2hXaEPDFGnErg",
+          "cachedResultName": "CoreAI Re-summary subject 1.0"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "groupName_firstItem": "={{ $('Microsoft SQL').item.json.chatname }}",
+            "groupId_firstItem": "={{ $('Microsoft SQL').item.json.groupid }}",
+            "userId_firstItem": "={{ $('Microsoft SQL').item.json.userid }}",
+            "displayName_firstItem": "={{ $('Microsoft SQL').item.json.fromuser }}",
+            "raw_text_firstItem": "={{ $('Microsoft SQL').item.json.raw_text }}",
+            "clean_text_firstItem": "={{ $('Microsoft SQL').item.json.clean_text }}",
+            "clean_text": "={{ $('Microsoft SQL').item.json.clean_text }}",
+            "HTTP__Get_Sender_Profile_userId_firstItem": "={{ $('Microsoft SQL').item.json.userid }}",
+            "SET__Normalize_Clean_Text_isExecuted": "={{ $('Microsoft SQL').isExecuted }}",
+            "raw_text": "={{ $('Microsoft SQL').item.json.raw_text }}",
+            "close_cause": "={{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}",
+            "close_reason": "={{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}"
+          },
+          "matchingColumns": [
+            "from_ticket_firstItem",
+            "body_events_firstItem",
+            "groupName_firstItem",
+            "groupId_firstItem",
+            "userId_firstItem",
+            "displayName_firstItem",
+            "raw_text_firstItem",
+            "clean_text_firstItem",
+            "clean_text",
+            "HTTP__Get_Sender_Profile_userId_firstItem",
+            "SET__Normalize_Clean_Text_isExecuted",
+            "raw_text",
+            "Upload_Image_isExecuted",
+            "Upload_Image_clean_text"
+          ],
+          "schema": [
+            {
+              "id": "from_ticket_firstItem",
+              "displayName": "from_ticket_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "body_events_firstItem",
+              "displayName": "body_events_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "groupName_firstItem",
+              "displayName": "groupName_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "groupId_firstItem",
+              "displayName": "groupId_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "userId_firstItem",
+              "displayName": "userId_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "displayName_firstItem",
+              "displayName": "displayName_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "raw_text_firstItem",
+              "displayName": "raw_text_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "clean_text_firstItem",
+              "displayName": "clean_text_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "clean_text",
+              "displayName": "clean_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "HTTP__Get_Sender_Profile_userId_firstItem",
+              "displayName": "HTTP__Get_Sender_Profile_userId_firstItem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SET__Normalize_Clean_Text_isExecuted",
+              "displayName": "SET__Normalize_Clean_Text_isExecuted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "raw_text",
+              "displayName": "raw_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "close_cause",
+              "displayName": "close_cause",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "close_reason",
+              "displayName": "close_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        -560
+      ],
+      "name": "Call CoreAI Re-summary subject",
+      "id": "63f73f19-c2ef-4e86-b6c7-209136630291",
+      "disabled": true
     }
   ],
   "pinData": {},
@@ -341,17 +519,6 @@
         ]
       ]
     },
-    "Match IT Team": {
-      "main": [
-        [
-          {
-            "node": "Send email To DavMail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Update Ticket Status": {
       "main": [
         [
@@ -373,18 +540,45 @@
           }
         ]
       ]
+    },
+    "Match IT Team": {
+      "main": [
+        [
+          {
+            "node": "Send email To DavMail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call CoreAI Re-summary subject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call CoreAI Re-summary subject": {
+      "main": [
+        [
+          {
+            "node": "Send email To DavMail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "timezone": "Asia/Bangkok",
-    "callerPolicy": "workflowsFromSameOwner",
-    "binaryMode": "separate"
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "e7e85da0-6ab5-4170-bd5f-4a54458bdc84",
+  "versionId": "eda07fac-1a8f-4781-ad18-abb5b7cee28b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"

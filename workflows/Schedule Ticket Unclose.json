@@ -1,25 +1,6 @@
 {
-  "name": "Schedule Ticket Unclose 1.3",
+  "name": "Schedule Ticket Unclose 1.4.1",
   "nodes": [
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 8
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        0,
-        0
-      ],
-      "id": "6c281d3f-03b3-40e3-898a-9fc6f988c58c",
-      "name": "Schedule Trigger"
-    },
     {
       "parameters": {
         "fromEmail": "helpdesk@example.com",
@@ -36,7 +17,7 @@
       "typeVersion": 2.1,
       "position": [
         416,
-        -320
+        -416
       ],
       "id": "e03e0322-c963-4f61-a173-493e011e7b2a",
       "name": "Send email To DavMail",
@@ -51,47 +32,13 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "01d05d3d-e86c-406e-bf05-d1fb53333b1a",
-              "leftValue": "={{ Object.keys($json).length === 0 }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        400,
-        0
-      ],
-      "id": "f10d1902-9e39-43a5-acb0-410f05618237",
-      "name": "If notEmpty"
-    },
-    {
-      "parameters": {
         "options": {}
       },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
         80,
-        -304
+        -400
       ],
       "id": "13bbdc1b-b64a-4ac5-8225-7bff51df3ed1",
       "name": "Loop Over Items",
@@ -106,7 +53,7 @@
       "typeVersion": 1.1,
       "position": [
         592,
-        -320
+        -416
       ],
       "id": "ffff049c-2596-4261-ba9d-6ecf1d60235a",
       "name": "Update Ticket Status",
@@ -210,11 +157,243 @@
       "typeVersion": 1.2,
       "position": [
         784,
-        -320
+        -416
       ],
       "name": "Call LogSQLServer v1.0.0",
       "id": "ddfd21ff-9431-437d-a335-e5814081593f",
       "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## วิธีเก่า วิธีการเปิดที่ไม่มีการปิด Ticket",
+        "height": 272,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        16,
+        -464
+      ],
+      "typeVersion": 1,
+      "id": "1eac5496-beb3-47ec-af91-c270d59c7594",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        -32
+      ],
+      "id": "a2b67bb5-4166-4ec9-821b-b8cf03f3bdfd",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "01d05d3d-e86c-406e-bf05-d1fb53333b1a",
+              "leftValue": "={{ Object.keys($json).length === 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        -32
+      ],
+      "id": "379cbd45-33da-47a3-8b99-96aca8178958",
+      "name": "If notEmpty"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "assigned_to, message_id, subject, clean_text, branch_name, branch_company, created_date, created_by, it_name",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -128
+      ],
+      "id": "366d9013-4286-44c3-a354-4c5212b4a2e8",
+      "name": "Aggregate",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    t.*, \n    i.fromUser AS it_name\nFROM [YourDatabase].[dbo].[ticket] t\nLEFT JOIN [YourDatabase].[dbo].[it_team] i ON t.updated_by = i.userId\nWHERE t.status = 'assigned';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        -32
+      ],
+      "id": "fecc285f-3f11-41c4-ac81-c6f99ee208d2",
+      "name": "Get Pending Tickets 2",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "credentials": {
+        "microsoftSql": {
+          "id": "YOUR_SQL_CREDENTIAL_ID",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'assigned';"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "93c6ac1a-947a-4286-9d66-ebc44b0d369b",
+      "name": "Get Pending Tickets 1",
+      "credentials": {
+        "microsoftSql": {
+          "id": "YOUR_SQL_CREDENTIAL_ID",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "51efdf26-1cef-4c67-bcf7-aa4ef67c9473",
+              "leftValue": "={{ $('Get Pending Tickets 2').item.json.subject }}",
+              "rightValue": "SR-IT",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        -32
+      ],
+      "id": "bc0abc80-e439-4303-a694-958f55b5727f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "assigned_to, message_id, subject, clean_text, branch_name, branch_company, created_date, created_by, it_name",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        864,
+        64
+      ],
+      "id": "e6ce0134-5c97-4e34-a2d1-8a7bf14ba073",
+      "name": "Aggregate1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "fromEmail": "helpdesk@example.com",
+        "toEmail": "IT_Support@example.com",
+        "subject": "=🔔 สรุป Ticket ตกค้าง ({{ $json.data.length }} รายการ) ประจำวันที่ {{ $now.setZone('Asia/Bangkok').toFormat('dd/MM/yyyy') }}",
+        "html": "={{\n  \"<b>🔔 สรุปรายการ Ticket ตกค้าง ทั้งหมด \" + $json.data.length + \" รายการ</b><br>\" +\n  \"รบกวนให้ทางทีม IT Support ย้อนปิด Ticket ทางไลน์ผ่านข้อความเดิม<br><br>\" +\n  \"==================================================<br><br>\" +\n  $json.data.map((i, index) => {\n    \n    // จัดการวันที่และคำนวณวันย้อนหลัง\n    const now = DateTime.now();\n    const created = DateTime.fromJSDate(new Date(i.created_date));\nconst dateStr = created.setZone('utc').toFormat('dd/MM/yyyy HH:mm'); // ผลลัพธ์: 18/02/2026 13:23\n    \n    const diffDays = Math.floor(now.diff(created, 'days').days);\n    \n    // แสดงเฉพาะกรณีที่มากกว่า 0 วัน (ไม่เอา \"วันนี้\" และไม่เอาค่าติดลบ)\n    let daysDisplay = \"\";\n    if (diffDays > 0) {\n      daysDisplay = ` ( <strong style=\"color: red;\">${diffDays} วันที่ผ่านมา</strong> )`;\n    }\n    \n    // ดึงเฉพาะรายละเอียดปัญหา\n    const detail = i.clean_text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1]?.trim() || i.clean_text;\n    \n    return `<b>${index + 1}. ${i.subject}</b><br>\n    🏢 สาขา: ${i.branch_name} (${i.branch_company})<br>\n    🙋🏻 ผู้แจ้ง: ${i.created_by}<br>\n    👨🏻‍🔧 IT ผู้ดูแล: ${i.it_name || \"ไม่ระบุ\"}<br>\n    📅 แจ้งเมื่อ: ${dateStr}${daysDisplay}<br>\n    📝 รายละเอียด: ${detail}`;\n  }).join('<br><br>--------------------------------------------------<br><br>') + \n  \"<br><br>==================================================\"\n}}\n\n",
+        "options": {
+          "appendAttribution": false,
+          "attachments": ""
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1088,
+        64
+      ],
+      "id": "d65d331a-b9d2-4dde-ad9e-d0a79d8a8454",
+      "name": "Send email To IT Support Group",
+      "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_EMAIL_CREDENTIAL_ID",
+          "name": "DavMail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "helpdesk@example.com",
+        "toEmail": "user1@example.com",
+        "subject": "=🔔 สรุป Ticket สำหรับทีม IT ตกค้าง ({{ $json.data.length }} รายการ) ประจำวันที่ {{ $now.setZone('Asia/Bangkok').toFormat('dd/MM/yyyy') }}",
+        "html": "={{\n  \"<b>🔔 สรุปรายการ Ticket ตกค้าง สำหรับทีม IT ทั้งหมด \" + $json.data.length + \" รายการ</b><br>\" +\n  \"รบกวนให้ทางทีม IT ย้อนปิด Ticket ทางไลน์ผ่านข้อความเดิมด้วยครับ<br><br>\" +\n  \"==================================================<br><br>\" +\n  $json.data.map((i, index) => {\n    \n    // จัดการวันที่และคำนวณวันย้อนหลัง\n    const now = DateTime.now();\n    const created = DateTime.fromJSDate(new Date(i.created_date));\n    const dateStr = created.setZone('utc').toFormat('dd/MM/yyyy HH:mm'); // ผลลัพธ์: 18/02/2026 13:23\n    \n    const diffDays = Math.floor(now.diff(created, 'days').days);\n    \n    // แสดงเฉพาะกรณีที่มากกว่า 0 วัน (ไม่เอา \"วันนี้\" และไม่เอาค่าติดลบ)\n    let daysDisplay = \"\";\n    if (diffDays > 0) {\n      daysDisplay = ` ( <strong style=\"color: red;\">${diffDays} วันที่ผ่านมา</strong> )`;\n    }\n    \n    // ดึงเฉพาะรายละเอียดปัญหา\n    const detail = i.clean_text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1]?.trim() || i.clean_text;\n    \n    return `<b>${index + 1}. ${i.subject}</b><br>\n    🏢 สาขา: ${i.branch_name} (${i.branch_company})<br>\n    🙋🏻 ผู้แจ้ง: ${i.created_by}<br>\n    👨🏻‍🔧 IT ผู้ดูแล: ${i.it_name || \"ไม่ระบุ\"}<br>\n    📅 แจ้งเมื่อ: ${dateStr}${daysDisplay}<br>\n    📝 รายละเอียด: ${detail}`;\n  }).join('<br><br>--------------------------------------------------<br><br>') + \n  \"<br><br>==================================================\"\n}}",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "",
+          "ccEmail": "user2@example.com, user3@example.com"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1088,
+        -128
+      ],
+      "id": "51191951-ecc6-40a7-b6ea-b6910ffea6bc",
+      "name": "Send email To Senior Group",
+      "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_EMAIL_CREDENTIAL_ID",
+          "name": "DavMail"
+        }
+      }
     },
     {
       "parameters": {
@@ -240,129 +419,16 @@
       "typeVersion": 1,
       "position": [
         256,
-        -320
+        -416
       ],
       "id": "c4ad9d70-59c6-4c2d-9fcc-b63982c71cbf",
-      "name": "Match IT Team",
+      "name": "Match IT Team Old",
       "alwaysOutputData": true,
       "disabled": true
-    },
-    {
-      "parameters": {
-        "content": "## วิธีเก่า วิธีการเปิดที่ไม่มีการปิด Ticket",
-        "height": 272,
-        "width": 944
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        16,
-        -368
-      ],
-      "typeVersion": 1,
-      "id": "1eac5496-beb3-47ec-af91-c270d59c7594",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "fromEmail": "helpdesk@example.com",
-        "toEmail": "IT_Support@example.com",
-        "subject": "=🔔 สรุป Ticket ตกค้าง ({{ $json.data.length }} รายการ) ประจำวันที่ {{ $now.setZone('Asia/Bangkok').toFormat('dd/MM/yyyy') }}",
-        "emailFormat": "text",
-        "text": "={{\n  \"🔔 สรุปรายการ Ticket ตกค้าง ทั้งหมด \" + $json.data.length + \" รายการ\\n\" +\n  \"==================================================\\n\\n\" +\n  $json.data.map((i, index) => {\n    \n    const dateObj = new Date(i.created_date);\n    const date = DateTime.fromJSDate(dateObj).setZone('Asia/Bangkok').toFormat('dd/MM/yyyy HH:mm');\n    const detail = i.clean_text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1]?.trim() || i.clean_text;\n    \n    return `${index + 1}. ${i.subject}\n    🏢 สาขา: ${i.branch_name} (${i.branch_company})\n    🙋🏻 ผู้แจ้ง: ${i.created_by}\n    👨🏻‍🔧 IT ผู้ดูแล: ${i.assigned_to}\n    📅 แจ้งเมื่อ: ${date}\n    📝 รายละเอียด: ${detail}`;\n  }).join('\\n\\n--------------------------------------------------\\n\\n')\n}}\n\n==================================================\n\n\n",
-        "options": {
-          "appendAttribution": false,
-          "attachments": ""
-        }
-      },
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [
-        960,
-        -16
-      ],
-      "id": "e4691556-6b0e-4750-baae-eabf4317eae1",
-      "name": "Send email To Lead IT Support",
-      "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
-      "credentials": {
-        "smtp": {
-          "id": "YOUR_EMAIL_CREDENTIAL_ID",
-          "name": "DavMail"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "include": "specifiedFields",
-        "fieldsToInclude": "assigned_to, message_id, subject, clean_text, branch_name, branch_company, created_date, created_by",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        784,
-        -16
-      ],
-      "id": "84ac61c4-0d9a-461f-8fe6-649dd5cf75fc",
-      "name": "Aggregate",
-      "executeOnce": false
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'assigned';"
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.1,
-      "position": [
-        624,
-        -16
-      ],
-      "id": "bb52165e-aa26-4601-90a6-67b75b815ffa",
-      "name": "Get Pending Tickets 2",
-      "alwaysOutputData": false,
-      "executeOnce": true,
-      "credentials": {
-        "microsoftSql": {
-          "id": "YOUR_SQL_CREDENTIAL_ID",
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT *\nFROM [YourDatabase].[dbo].[ticket]\nWHERE status = 'assigned';"
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.1,
-      "position": [
-        208,
-        0
-      ],
-      "id": "2b64061c-1197-472b-9818-093bae3b8e1e",
-      "name": "Get Pending Tickets 1",
-      "credentials": {
-        "microsoftSql": {
-          "id": "YOUR_SQL_CREDENTIAL_ID",
-          "name": "Microsoft SQL account"
-        }
-      }
     }
   ],
   "pinData": {},
   "connections": {
-    "Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "Get Pending Tickets 1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Send email To DavMail": {
       "main": [
         [
@@ -374,23 +440,11 @@
         ]
       ]
     },
-    "If notEmpty": {
-      "main": [
-        [
-          {
-            "node": "Get Pending Tickets 2",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
     "Loop Over Items": {
       "main": [
         [
           {
-            "node": "Match IT Team",
+            "node": "Match IT Team Old",
             "type": "main",
             "index": 0
           }
@@ -415,11 +469,22 @@
         ]
       ]
     },
-    "Match IT Team": {
+    "Schedule Trigger": {
       "main": [
         [
           {
-            "node": "Send email To DavMail",
+            "node": "Get Pending Tickets 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If notEmpty": {
+      "main": [
+        [
+          {
+            "node": "Get Pending Tickets 2",
             "type": "main",
             "index": 0
           }
@@ -430,23 +495,18 @@
       "main": [
         [
           {
-            "node": "Send email To Lead IT Support",
+            "node": "Send email To Senior Group",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send email To Lead IT Support": {
-      "main": [
-        []
-      ]
-    },
     "Get Pending Tickets 2": {
       "main": [
         [
           {
-            "node": "Aggregate",
+            "node": "If",
             "type": "main",
             "index": 0
           }
@@ -463,17 +523,58 @@
           }
         ]
       ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Send email To IT Support Group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match IT Team Old": {
+      "main": [
+        [
+          {
+            "node": "Send email To DavMail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "a818de33-c8a8-4363-a947-9cb319893438",
+  "versionId": "1d412e3e-f174-4b91-9b4e-071863591b09",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"

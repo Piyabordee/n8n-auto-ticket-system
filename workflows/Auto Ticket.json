@@ -1,5 +1,5 @@
 {
-  "name": "Auto Ticket 1.7.1",
+  "name": "Auto Ticket 1.7.2",
   "nodes": [
     {
       "parameters": {
@@ -20,7 +20,7 @@
             {
               "id": "da10145d-c436-42d7-8ef3-bc6c8ee38bf3",
               "name": "from_ticket",
-              "value": "={{ $('Webhook Line').first().json.body.events[0].message.text.match(/ผู้แจ้ง\\s*[:]?\\s*(.*?)(\\n|$)/)?.[1].trim() || \"ไม่ได้ระบุ\" }} ({{ ($('HTTP - Get Sender Profile').first().json.displayName || '').normalize('NFKC').replace(/[^\\w\\s\\u0E00-\\u0E7F()]/g, '') }})",
+              "value": "={{ $('Webhook Line').first().json.body.events[0].message.text.match(/ผู้(?:แ|เเ)จ้ง\\s*[:]?\\s*(.*?)(\\n|$)/)?.[1].trim() || \"ไม่ได้ระบุ\" }} ({{ ($('HTTP - Get Sender Profile').first().json.displayName || '').normalize('NFKC').replace(/[^\\w\\s\\u0E00-\\u0E7F()]/g, '') }})",
               "type": "string"
             }
           ]
@@ -211,7 +211,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN="
+              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN"
             }
           ]
         },
@@ -574,7 +574,7 @@
           "value": "vnzG9J1ipCdgk5Q4",
           "mode": "list",
           "cachedResultUrl": "/workflow/vnzG9J1ipCdgk5Q4",
-          "cachedResultName": "Auto Ticket CoreAI 1.3"
+          "cachedResultName": "Auto Ticket CoreAI 1.3.1"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -823,7 +823,7 @@
           "value": "q3ybqMcKYHUTu4qg",
           "mode": "list",
           "cachedResultUrl": "/workflow/q3ybqMcKYHUTu4qg",
-          "cachedResultName": "LogSQLServer v1.0.1"
+          "cachedResultName": "LogSQLServer 1.0.1"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -935,14 +935,14 @@
           "value": "USgdNP1aNHh1QJg3",
           "mode": "list",
           "cachedResultUrl": "/workflow/USgdNP1aNHh1QJg3",
-          "cachedResultName": "Auto Close Ticket 1.0"
+          "cachedResultName": "Auto Close Ticket 1.2"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
             "clean_text": "={{ $('SET - Normalize Clean Text').first().json.clean_text }}",
-            "quotedMessageId": "={{ $('Webhook Line').item.json.body.events[0].message.quotedMessageId }}",
-            "userId": "={{ $('Webhook Line').item.json.body.events[0].source.userId }}"
+            "quotedMessageId": "={{ $('Webhook Line').first().json.body.events[0].message.quotedMessageId }}",
+            "userId": "={{ $('Webhook Line').first().json.body.events[0].source.userId }}"
           },
           "matchingColumns": [
             "clean_text",
@@ -1001,7 +1001,7 @@
           "value": "4tIlVjstYxU09G6a",
           "mode": "list",
           "cachedResultUrl": "/workflow/4tIlVjstYxU09G6a",
-          "cachedResultName": "Auto Assign 1.2"
+          "cachedResultName": "Auto Assign 1.2.1"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -1225,6 +1225,29 @@
       ],
       "id": "06fa48e5-341f-48d2-a84b-99523a81f83a",
       "name": "If IT Group"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "webhook_logs",
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        5248,
+        2208
+      ],
+      "id": "c7ee5c4e-8c74-4e5e-903c-dae9353201ae",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1490,11 +1513,12 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "3566c136-1bfa-4d08-a1b5-0b9cff3c0f05",
+  "versionId": "7cab5d49-1a43-479c-998f-df008b9fecf8",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"

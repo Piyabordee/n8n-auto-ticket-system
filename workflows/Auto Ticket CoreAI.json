@@ -1,5 +1,5 @@
 {
-  "name": "Auto Ticket CoreAI 1.3",
+  "name": "Auto Ticket CoreAI 1.3.1",
   "nodes": [
     {
       "parameters": {
@@ -9,10 +9,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        7184,
-        2480
+        7152,
+        2352
       ],
-      "id": "81813970-a322-4e94-b303-aa8d4bfaad11",
+      "id": "ea7e03b8-adfb-4d0c-832b-2379747e032c",
       "name": "Structured Output Sub Category"
     },
     {
@@ -30,10 +30,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6976,
-        2336
+        6944,
+        2208
       ],
-      "id": "032c6223-ecd3-4c1c-ba78-4e560409ad23",
+      "id": "e35fabf2-2b9c-4ebe-9bb8-166083fe47c9",
       "name": "Get Sub Category"
     },
     {
@@ -53,10 +53,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        7168,
-        2336
+        7136,
+        2208
       ],
-      "id": "1242cfb3-8db8-4a80-9e6d-e950287494c5",
+      "id": "4e6356f9-251f-4451-b6a4-69524d372ac6",
       "name": "Find Sub Category",
       "executeOnce": true,
       "retryOnFail": true,
@@ -78,10 +78,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6464,
-        2192
+        6432,
+        2064
       ],
-      "id": "8aa170c9-064b-4452-9259-93fa728fda57",
+      "id": "8e781cbc-5dc0-4ee7-99ce-709024ac9625",
       "name": "Get Branch Franchise"
     },
     {
@@ -102,10 +102,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6624,
-        2192
+        6592,
+        2064
       ],
-      "id": "0784880b-397a-48d8-80c1-4ea61ca59661",
+      "id": "d1d53856-78a3-42c5-ab62-6e8be03891e7",
       "name": "Set Branch Franchise"
     },
     {
@@ -116,10 +116,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        6288,
-        2192
+        6256,
+        2064
       ],
-      "id": "21a312a1-d871-437f-8b7b-5cbbd261cc45",
+      "id": "1f090f3a-9073-45aa-9ceb-95f2e3ce0886",
       "name": "Structured Output Core Agent"
     },
     {
@@ -135,7 +135,7 @@
             {
               "id": "b9dd931c-1427-405c-98a9-c7121ce57217",
               "name": "email_body",
-              "value": "={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}\n\n[ผู้แจ้ง] {{ $('Start').first().json.from_ticket_firstItem }}\n[หมวดหมู่] {{ $json['#category'] ||  $json['#sub_category']}}\n[หมวดหมู่ย่อย] {{ $('Merge').item.json.output.sub_category }}\n[บริษัท] {{ $('FInd Branch').item.json.output.company }}\n[สาขา] {{ $('FInd Branch').item.json.output.branch_name }}\n[เวลา] {{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).toFormat('dd-MM-yyyy HH:mm:ss') }}\n\n#category {{ $json['#category'] }}\n#set {{ $json['#branch'] }}={{ $('Merge').item.json.output.branch_name }}\n{{ $json['#sub_category'].toString().replace(/=?\\s*Printer/i, '').trim() }}\n#set Contact=Line แจ้งปัญหาและแจ้งซ่อม\n#set Day={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setLocale('en').toFormat('cccc') }}\n#set User ที่แจ้ง={{ $('Start').first().json.from_ticket_firstItem }}",
+              "value": "={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}\n\n#category {{ $json['#category'] }}\n#set {{ $json['#branch'] }}={{ $('Merge').item.json.output.branch_name }}\n{{ $json['#sub_category'].toString().replace(/=?\\s*Printer/i, '').trim() }}\n#set Contact=Line แจ้งปัญหาและแจ้งซ่อม\n#set Day={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setLocale('en').toFormat('cccc') }}\n#set User ที่แจ้ง={{ $('Start').first().json.from_ticket_firstItem }}\n#set เวลาเปิด Ticket={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).toFormat('dd-MM-yyyy HH:mm:ss') }}\n#set รายละเอียดงาน={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}",
               "type": "string"
             }
           ]
@@ -145,10 +145,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7824,
-        2128
+        7792,
+        2000
       ],
-      "id": "b0b99ee0-b90e-4251-86ec-8b25527591c6",
+      "id": "e2babb08-108d-4459-b835-2dbaad14c0c1",
       "name": "Set Sub/Body",
       "alwaysOutputData": false
     },
@@ -161,10 +161,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        7536,
-        2128
+        7504,
+        2000
       ],
-      "id": "b9df0a13-7556-4606-a063-15baec2daa9f",
+      "id": "43236a93-19ad-4f07-8c6c-0ed0f7212ab0",
       "name": "Merge"
     },
     {
@@ -174,7 +174,7 @@
             {
               "id": "06e1c629-cf43-469f-9f73-0ec894041707",
               "name": "#category",
-              "value": "={{ \n(() => {\n  const c = $('Core Agent').item.json.output.category;\n  const m = {\n    'SW': 'Software',\n    'NETWORK': 'Network',\n    'CAMERA': 'Camera', \n    'PRINTER': 'Printer', \n    'RATE': 'Software', \n    'POS': 'Software', \n    'REQUEST' : 'Requested',\n    'PASSWORD' : 'Password Reset',\n    'HW': 'Hardware'\n  };\n  return m[c] ? `${m[c]}` : '';\n})() \n}}",
+              "value": "={{ \n(() => {\n  const c = $('Core Agent').item.json.output.category;\n  const m = {\n    'SW': 'Software',\n    'NETWORK': 'Network',\n    'CAMERA': 'Camera', \n    'PRINTER': 'Printer', \n    'RATE': 'Software', \n    'POS': 'Software', \n    'REQUEST' : 'Requested',\n    'PASSWORD' : 'Password Reset',\n    'IT' : 'IT',\n    'HW': 'Hardware'\n  };\n  return m[c] ? `${m[c]}` : '';\n})() \n}}",
               "type": "string"
             },
             {
@@ -196,10 +196,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7664,
-        2128
+        7632,
+        2000
       ],
-      "id": "dd1273ae-6340-4cdf-8b09-89fc4c97bd80",
+      "id": "56707c72-571f-40cc-bad1-c9c1586fbc8b",
       "name": "Set Command Ticket"
     },
     {
@@ -212,10 +212,10 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        6976,
-        2112
+        6944,
+        1984
       ],
-      "id": "3acfcf6b-f4ff-47e6-82cc-a9227ab6e454",
+      "id": "7e81b81f-df61-47af-9369-c5a60e4c42e1",
       "name": "Aggregate"
     },
     {
@@ -235,10 +235,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        7152,
-        2112
+        7120,
+        1984
       ],
-      "id": "a970efd4-b642-4e61-a4ec-dd1bc3ff3588",
+      "id": "8771a97f-b379-4ccf-9ae5-b6abe5309e49",
       "name": "FInd Branch",
       "alwaysOutputData": false,
       "executeOnce": true,
@@ -250,10 +250,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        6784,
-        2112
+        6752,
+        1984
       ],
-      "id": "6f096bd2-e9e3-46a8-919c-0e33c0cb9c7f",
+      "id": "14eca152-315b-458f-bd1b-476d981a095f",
       "name": "Merge Company"
     },
     {
@@ -271,10 +271,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        5952,
-        2032
+        5920,
+        1904
       ],
-      "id": "2c3eb1d7-7f3a-4e90-ba28-38e17be89dd1",
+      "id": "44f8ab27-d26f-4691-9669-883e9ab4fc5c",
       "name": "Get Category"
     },
     {
@@ -295,10 +295,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6624,
-        2032
+        6592,
+        1904
       ],
-      "id": "e7b42fc2-6748-4720-856e-a534ce37c169",
+      "id": "83169725-51a4-4932-bed4-7fe06374dc36",
       "name": "Set Branch SPR"
     },
     {
@@ -316,10 +316,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        6464,
-        2032
+        6432,
+        1904
       ],
-      "id": "51b4955e-1f18-4abe-8a4e-1d3fcc7ae9e6",
+      "id": "7c859e8e-8f27-4a4e-bd89-a4993e1a8ba1",
       "name": "Get Branch SPR"
     },
     {
@@ -330,7 +330,7 @@
         "messages": {
           "messageValues": [
             {
-              "message": "=Role: IT Support Classifier & Data Extractor.\nCategory List:\n{{ $('Get Category').all().map(item => `- ${item.json.Name}${item.json.Alias ? ' (Keywords: ' + item.json.Alias + ')' : ''}`).join(\"\\n\") }}\n\nTASK:\n1. Extract Branch: Name found in text, else null.\n2. Determine Category: Match with Category List. (Priority: Hardware/Printer > Others).\n3. Identify Intent: \"INC\" (broken/error) or \"SR\" (request/setup).\n4. Generate Subject Summary: (THAI ONLY).\n\nSUMMARY FORMAT:\n\"[Branch] [Position/ID] [Device/Object] [Short Symptom]\"\n- Include identifiers like \"เคาน์เตอร์ 5\" or \"เครื่อง 2\" if present.\n- Tone: Professional, no polite particles (No ครับ/ค่ะ).\n- Technical terms (POS/LAN/WiFi/Printer) remain in English.\n- Max 60 characters.\n\nSPECIAL RULES:\n- \"Server\" -> Category: HW.\n- \"PSS\" keyword -> Category: SW.\n- \"POS machine\" keyword -> Category: POS.\n- \"แก้ไข MC\" or \"เพิ่มลายเส้น MC\" -> Category: REQUEST, Intent: SR."
+              "message": "=Role: IT Support Classifier & Data Extractor.\nCategory List:\n{{ $('Get Category').all().map(item => `- ${item.json.Name}${item.json.Alias ? ' (Keywords: ' + item.json.Alias + ')' : ''}`).join(\"\\n\") }}\n\nTASK:\n1. Extract Branch: Name found in text, else null.\n2. Determine Category: Match with Category List. (Priority: Hardware/Printer > Others).\n3. Identify Intent: \"INC\" (broken/error) or \"SR\" (request/setup/ดับไฟ).\n4. Generate Subject Summary: (THAI ONLY).\n\nSUMMARY FORMAT:\n\"[Branch] [Position/ID] [Device/Object] [Short Symptom]\"\n- Include identifiers like \"เคาน์เตอร์ 5\" or \"เครื่อง 2\" if present.\n- Tone: Professional, no polite particles (No ครับ/ค่ะ).\n- Technical terms (POS/LAN/WiFi/Printer) remain in English.\n- Max 60 characters.\n\nSPECIAL RULES:\n- \"Server\" -> Category: HW.\n- \"PSS\" keyword -> Category: SW.\n- \"POS machine\" keyword -> Category: POS.\n- \"แก้ไข MC\" or \"เพิ่มลายเส้น MC\" -> Category: REQUEST, Intent: SR.\n- \"แจ้งดับไฟ\" -> Intent: SR.\n- IT (Keywords: สาขา สีลม ผู้แจ้ง โชค และ น้ำฝน) ใช้เฉพาะ ผู้แจ้ง โชค และ น้ำฝน เท่านั้น"
             }
           ]
         },
@@ -339,10 +339,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        6144,
-        2032
+        6112,
+        1904
       ],
-      "id": "840f1786-36e8-4fdf-99df-265cb8ea57dd",
+      "id": "bbfbb3c2-7aec-46eb-99af-8ad4d6a57307",
       "name": "Core Agent",
       "executeOnce": true,
       "retryOnFail": true,
@@ -358,10 +358,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        7264,
-        1904
+        7232,
+        1776
       ],
-      "id": "dbccbae6-5af5-4810-a248-69d406e5de2f",
+      "id": "14f17d55-c2bc-49ba-bd77-8c350c03c05a",
       "name": "Structured Output Branch",
       "retryOnFail": true,
       "maxTries": 5,
@@ -379,15 +379,15 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        6864,
-        1984
+        6832,
+        1856
       ],
-      "id": "14b1e58f-fdad-4419-a145-b37453ec77e6",
+      "id": "72a514d1-911a-43b5-98e6-ebd830502003",
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
           "id": "YOUR_OPENROUTER_CREDENTIAL_ID",
-          "name": "OpenRouter account"
+          "name": "OpenRouter account 2"
         }
       }
     },
@@ -446,13 +446,13 @@
           ]
         }
       },
-      "id": "938a2d74-9379-4d80-8a04-c8c6de0c5795",
+      "id": "d9003987-192c-46b9-b481-2765e9b9c75c",
       "typeVersion": 1.1,
       "name": "Start",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "position": [
-        5744,
-        2032
+        5712,
+        1904
       ]
     },
     {
@@ -463,10 +463,10 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        8192,
-        2128
+        8160,
+        2000
       ],
-      "id": "df1a3961-f080-41c9-9132-5791d68d2416",
+      "id": "928f1b2d-4a7f-4017-b5f6-18210fb95a35",
       "name": "Microsoft SQL",
       "alwaysOutputData": false,
       "credentials": {
@@ -483,7 +483,7 @@
           "value": "q3ybqMcKYHUTu4qg",
           "mode": "list",
           "cachedResultUrl": "/workflow/q3ybqMcKYHUTu4qg",
-          "cachedResultName": "LogSQLServer v1.0.1"
+          "cachedResultName": "LogSQLServer 1.0.1"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -567,11 +567,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        8400,
-        2128
+        8368,
+        2000
       ],
       "name": "Call LogSQLServer v1.0.0",
-      "id": "5dbb9855-dccd-41c5-88f8-6fcc710f5db3"
+      "id": "c57f96e8-91f6-4b9f-a786-3d7ecbd5b8e3"
     },
     {
       "parameters": {
@@ -682,7 +682,7 @@
             {
               "id": "created_at",
               "name": "created_date",
-              "value": "={{ new Date($('Start').first().json.body_events_firstItem[0].timestamp).toISOString().replace('T', ' ').replace('Z', '') }}",
+              "value": "={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setZone('Asia/Bangkok').toFormat('yyyy-MM-dd HH:mm:ss') }}",
               "type": "string"
             },
             {
@@ -694,7 +694,7 @@
             {
               "id": "updated_at",
               "name": "updated_date",
-              "value": "={{ new Date($('Start').first().json.body_events_firstItem[0].timestamp).toISOString().replace('T', ' ').replace('Z', '') }}",
+              "value": "={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setZone('Asia/Bangkok').toFormat('yyyy-MM-dd HH:mm:ss') }}",
               "type": "string"
             },
             {
@@ -707,23 +707,111 @@
         },
         "options": {}
       },
-      "id": "87f71920-b2ba-45c7-8add-64b08733a165",
+      "id": "6e20ddcd-2d68-4641-8238-38cb42c1d278",
       "name": "Set (ticket)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        8016,
-        2128
+        7984,
+        2000
       ]
     }
   ],
   "pinData": {},
   "connections": {
+    "Structured Output Sub Category": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Find Sub Category",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Sub Category": {
+      "main": [
+        [
+          {
+            "node": "Find Sub Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Sub Category": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Branch Franchise": {
+      "main": [
+        [
+          {
+            "node": "Set Branch Franchise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Branch Franchise": {
+      "main": [
+        [
+          {
+            "node": "Merge Company",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Structured Output Core Agent": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Core Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Set Sub/Body": {
       "main": [
         [
           {
             "node": "Set (ticket)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Set Command Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Command Ticket": {
+      "main": [
+        [
+          {
+            "node": "Set Sub/Body",
             "type": "main",
             "index": 0
           }
@@ -757,6 +845,17 @@
         ]
       ]
     },
+    "Merge Company": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Get Category": {
       "main": [
         [
@@ -779,17 +878,6 @@
         ]
       ]
     },
-    "Merge Company": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Get Branch SPR": {
       "main": [
         [
@@ -797,61 +885,6 @@
             "node": "Set Branch Company",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Get Branch Franchise": {
-      "main": [
-        [
-          {
-            "node": "Set Branch Franchise",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Branch Franchise": {
-      "main": [
-        [
-          {
-            "node": "Merge Company",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Set Command Ticket",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get Sub Category": {
-      "main": [
-        [
-          {
-            "node": "Find Sub Category",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Find Sub Category": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -872,45 +905,12 @@
         ]
       ]
     },
-    "Structured Output Core Agent": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "Core Agent",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Sub Category": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "Find Sub Category",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Structured Output Branch": {
       "ai_outputParser": [
         [
           {
             "node": "FInd Branch",
             "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Command Ticket": {
-      "main": [
-        [
-          {
-            "node": "Set Sub/Body",
-            "type": "main",
             "index": 0
           }
         ]
@@ -979,12 +979,13 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "40bddbed-1497-4638-b24a-29e567c6c13a",
+  "versionId": "b19b6b56-ec8c-4317-a8af-b25238ce773d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"
