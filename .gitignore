@@ -27,3 +27,4 @@ SQL/SQLQuery.sql
 .env.sql
 create_tables.sql
 *.csv
+replacements.txt
