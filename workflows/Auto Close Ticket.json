@@ -1,5 +1,5 @@
 {
-  "name": "Auto Close Ticket 1.2",
+  "name": "Auto Close Ticket 1.2.1",
   "nodes": [
     {
       "parameters": {
@@ -28,10 +28,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        704,
-        -496
+        1840,
+        -688
       ],
-      "id": "fb2b34c3-26a0-403a-a6f6-708f16e884f4",
+      "id": "bada872a-065f-4a5c-84df-3ca894406b83",
       "name": "If"
     },
     {
@@ -42,10 +42,10 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        928,
-        -496
+        2064,
+        -688
       ],
-      "id": "f8f87d04-dff7-482a-99c1-a79b23e4986a",
+      "id": "15c5d856-597a-44ea-aea8-bc52f21c04ea",
       "name": "Microsoft SQL",
       "alwaysOutputData": false,
       "credentials": {
@@ -84,10 +84,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1152,
-        -496
+        2288,
+        -688
       ],
-      "id": "39e70edb-0798-442f-9a75-a1bd53daa085",
+      "id": "ad6dfe7f-9374-4eb7-b789-c507e63f46e6",
       "name": "If notEmpty"
     },
     {
@@ -96,7 +96,7 @@
         "toEmail": "helpdesk@example.com",
         "subject": "={{ $('If notEmpty').item.json.subject }}",
         "emailFormat": "text",
-        "text": "={{ $('If notEmpty').item.json.email_body }}\n#set เวลาปิด Ticket={{ $now.toFormat('dd-MM-yyyy HH:mm:ss') }}\n#assign {{ $json.email_spiceworks }}\n#set สาเหตุ={{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}\n#set การแก้ไขปัญหา={{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*$)/)?.[1].trim() }}\n#close",
+        "text": "={{ $('If notEmpty').item.json.email_body }}\n#set วันที่ปิด Ticket={{ $now.toFormat('dd-MM-yyyy') }}\n#set เวลาปิด Ticket={{ $now.toFormat('HH:mm:ss') }}\n#assign {{ $json.email_spiceworks }}\n#set สาเหตุ={{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}\n#set การแก้ไขปัญหา={{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*$)/)?.[1].trim() }}\n#close",
         "options": {
           "appendAttribution": false,
           "attachments": ""
@@ -105,10 +105,10 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1824,
-        -496
+        2736,
+        -688
       ],
-      "id": "3b3cb77c-f6ec-4aac-948b-e0f56273d453",
+      "id": "224e1a0a-6f45-4618-be25-2002c35b9f60",
       "name": "Send email To DavMail",
       "webhookId": "80cc3563-9de4-4d51-bf92-1e4b8acbe216",
       "retryOnFail": true,
@@ -129,10 +129,10 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        2048,
-        -496
+        2960,
+        -688
       ],
-      "id": "4e0106ed-4c6e-4aed-8da5-35f21452b154",
+      "id": "0edd97ca-38c7-49fd-ae18-47bf16d78340",
       "name": "Update Ticket Status",
       "credentials": {
         "microsoftSql": {
@@ -232,11 +232,11 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
       "position": [
-        2272,
-        -496
+        3184,
+        -688
       ],
       "name": "Call LogSQLServer",
-      "id": "1bc3fd08-629e-43f8-b5d9-5206109f7ea3"
+      "id": "224b7589-b3c2-48bf-861a-751d27951338"
     },
     {
       "parameters": {
@@ -257,13 +257,13 @@
           ]
         }
       },
-      "id": "2f05e311-4d7c-4259-9faf-5ab02d3594a6",
+      "id": "a4cf6cda-ebf4-4397-8c61-e7b19ac1b448",
       "typeVersion": 1.1,
       "name": "Start",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "position": [
-        480,
-        -496
+        1616,
+        -688
       ]
     },
     {
@@ -274,10 +274,10 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.1,
       "position": [
-        1376,
-        -496
+        2512,
+        -688
       ],
-      "id": "3e6184a2-be01-4bc5-bac0-6b8d66e4fc6c",
+      "id": "839a7db2-6d4f-45e4-a4ad-a91afe184ab0",
       "name": "Match IT Team",
       "credentials": {
         "microsoftSql": {
@@ -285,192 +285,6 @@
           "name": "Microsoft SQL account"
         }
       }
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "Mgv2hXaEPDFGnErg",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/Mgv2hXaEPDFGnErg",
-          "cachedResultName": "CoreAI Re-summary subject 1.0"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "groupName_firstItem": "={{ $('Microsoft SQL').item.json.chatname }}",
-            "groupId_firstItem": "={{ $('Microsoft SQL').item.json.groupid }}",
-            "userId_firstItem": "={{ $('Microsoft SQL').item.json.userid }}",
-            "displayName_firstItem": "={{ $('Microsoft SQL').item.json.fromuser }}",
-            "raw_text_firstItem": "={{ $('Microsoft SQL').item.json.raw_text }}",
-            "clean_text_firstItem": "={{ $('Microsoft SQL').item.json.clean_text }}",
-            "clean_text": "={{ $('Microsoft SQL').item.json.clean_text }}",
-            "HTTP__Get_Sender_Profile_userId_firstItem": "={{ $('Microsoft SQL').item.json.userid }}",
-            "SET__Normalize_Clean_Text_isExecuted": "={{ $('Microsoft SQL').isExecuted }}",
-            "raw_text": "={{ $('Microsoft SQL').item.json.raw_text }}",
-            "close_cause": "={{ $('Start').item.json.clean_text.match(/(?:อาการ|ปัญหาอาการ)[\\s=:]*([\\s\\S]*?)(?=\\s*การแก้ไขปัญหา)/)?.[1].trim() }}",
-            "close_reason": "={{ $('Start').item.json.clean_text.match(/การแก้ไขปัญหา[\\s=:]*([\\s\\S]*?)(?=\\s*@|$)/)?.[1].trim() }}"
-          },
-          "matchingColumns": [
-            "from_ticket_firstItem",
-            "body_events_firstItem",
-            "groupName_firstItem",
-            "groupId_firstItem",
-            "userId_firstItem",
-            "displayName_firstItem",
-            "raw_text_firstItem",
-            "clean_text_firstItem",
-            "clean_text",
-            "HTTP__Get_Sender_Profile_userId_firstItem",
-            "SET__Normalize_Clean_Text_isExecuted",
-            "raw_text",
-            "Upload_Image_isExecuted",
-            "Upload_Image_clean_text"
-          ],
-          "schema": [
-            {
-              "id": "from_ticket_firstItem",
-              "displayName": "from_ticket_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "body_events_firstItem",
-              "displayName": "body_events_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "groupName_firstItem",
-              "displayName": "groupName_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "groupId_firstItem",
-              "displayName": "groupId_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "userId_firstItem",
-              "displayName": "userId_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "displayName_firstItem",
-              "displayName": "displayName_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "raw_text_firstItem",
-              "displayName": "raw_text_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "clean_text_firstItem",
-              "displayName": "clean_text_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "clean_text",
-              "displayName": "clean_text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "HTTP__Get_Sender_Profile_userId_firstItem",
-              "displayName": "HTTP__Get_Sender_Profile_userId_firstItem",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "SET__Normalize_Clean_Text_isExecuted",
-              "displayName": "SET__Normalize_Clean_Text_isExecuted",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "raw_text",
-              "displayName": "raw_text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "close_cause",
-              "displayName": "close_cause",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "close_reason",
-              "displayName": "close_reason",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
-      "position": [
-        1600,
-        -560
-      ],
-      "name": "Call CoreAI Re-summary subject",
-      "id": "63f73f19-c2ef-4e86-b6c7-209136630291",
-      "disabled": true
     }
   ],
   "pinData": {},
@@ -548,22 +362,6 @@
             "node": "Send email To DavMail",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Call CoreAI Re-summary subject",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call CoreAI Re-summary subject": {
-      "main": [
-        [
-          {
-            "node": "Send email To DavMail",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -578,7 +376,7 @@
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "eda07fac-1a8f-4781-ad18-abb5b7cee28b",
+  "versionId": "4fe683cd-9ce7-4a63-a1bc-e2dcf3a50ea7",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"

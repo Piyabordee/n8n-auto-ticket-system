@@ -1225,29 +1225,6 @@
       ],
       "id": "06fa48e5-341f-48d2-a84b-99523a81f83a",
       "name": "If IT Group"
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "tableId": "webhook_logs",
-        "filters": {
-          "conditions": []
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        5248,
-        2208
-      ],
-      "id": "c7ee5c4e-8c74-4e5e-903c-dae9353201ae",
-      "name": "Update a row",
-      "credentials": {
-        "supabaseApi": {
-          "id": "YOUR_SUPABASE_CREDENTIAL_ID",
-          "name": "Supabase account"
-        }
-      }
     }
   ],
   "pinData": {},
@@ -1518,7 +1495,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "7cab5d49-1a43-479c-998f-df008b9fecf8",
+  "versionId": "a515452f-8a2c-4142-a91b-a7a367066576",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"

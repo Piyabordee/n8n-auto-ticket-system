@@ -180,6 +180,7 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false
   },
   "versionId": "811f3001-a5a7-427f-b1ce-406d0677d63a",

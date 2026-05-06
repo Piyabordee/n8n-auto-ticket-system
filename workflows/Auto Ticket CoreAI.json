@@ -1,5 +1,5 @@
 {
-  "name": "Auto Ticket CoreAI 1.3.1",
+  "name": "Auto Ticket CoreAI 1.3.2",
   "nodes": [
     {
       "parameters": {
@@ -135,7 +135,7 @@
             {
               "id": "b9dd931c-1427-405c-98a9-c7121ce57217",
               "name": "email_body",
-              "value": "={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}\n\n#category {{ $json['#category'] }}\n#set {{ $json['#branch'] }}={{ $('Merge').item.json.output.branch_name }}\n{{ $json['#sub_category'].toString().replace(/=?\\s*Printer/i, '').trim() }}\n#set Contact=Line แจ้งปัญหาและแจ้งซ่อม\n#set Day={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setLocale('en').toFormat('cccc') }}\n#set User ที่แจ้ง={{ $('Start').first().json.from_ticket_firstItem }}\n#set เวลาเปิด Ticket={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).toFormat('dd-MM-yyyy HH:mm:ss') }}\n#set รายละเอียดงาน={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}",
+              "value": "={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}\n\n#category {{ $json['#category'] }}\n#set {{ $json['#branch'] }}={{ $('Merge').item.json.output.branch_name }}\n{{ $json['#sub_category'].toString().replace(/=?\\s*Printer/i, '').trim() }}\n#set Contact=Line แจ้งปัญหาและแจ้งซ่อม\n#set Day={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).setLocale('en').toFormat('cccc') }}\n#set User ที่แจ้ง={{ $('Start').first().json.from_ticket_firstItem }}\n#set วันที่เปิด Ticket={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).toFormat('dd-MM-yyyy') }}\n#set เวลาเปิด Ticket={{ DateTime.fromMillis($('Start').first().json.body_events_firstItem[0].timestamp).toFormat('HH:mm:ss') }}\n#set รายละเอียดงาน={{ $('Start').first().json.body_events_firstItem[0].message.text.match(/ปัญหา\\s*\\s*([\\s\\S]*)/)?.[1].trim() }}\n{{ $json['#type'] }}",
               "type": "string"
             }
           ]
@@ -187,6 +187,12 @@
               "id": "faf8aa18-38b5-4c89-a958-8490f4fcb20a",
               "name": "#branch",
               "value": "={{ $json.output.company }}",
+              "type": "string"
+            },
+            {
+              "id": "7aeb2f3a-1f44-458c-a0b1-a81af130043c",
+              "name": "#type",
+              "value": "={{ \n(() => {\n  const c = $('Core Agent').item.json.output.intent;\n  const m = {\n    'INC': 'Incident',\n    'SR': 'Service Request'\n  };\n  return m[c] ? `#set Type=${m[c]}` : '';\n})() \n}}",
               "type": "string"
             }
           ]
@@ -352,14 +358,13 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"branch_name\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"The official branch name ONLY. Do not include aliases or parentheses.\"\n\t\t},\n\t\t\"company\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"The company name associated with the branch.\"\n\t\t}\n\t}\n}",
-        "autoFix": true
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"branch_name\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"The official branch name ONLY. Do not include aliases or parentheses.\"\n\t\t},\n\t\t\"company\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"The company name associated with the branch.\"\n\t\t}\n\t}\n}"
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        7232,
-        1776
+        7264,
+        1824
       ],
       "id": "14f17d55-c2bc-49ba-bd77-8c350c03c05a",
       "name": "Structured Output Branch",
@@ -387,7 +392,7 @@
       "credentials": {
         "openRouterApi": {
           "id": "YOUR_OPENROUTER_CREDENTIAL_ID",
-          "name": "OpenRouter account 2"
+          "name": "Enterprise"
         }
       }
     },
@@ -933,11 +938,6 @@
             "node": "Find Sub Category",
             "type": "ai_languageModel",
             "index": 0
-          },
-          {
-            "node": "Structured Output Branch",
-            "type": "ai_languageModel",
-            "index": 0
           }
         ]
       ]
@@ -985,7 +985,7 @@
     "timezone": "Asia/Bangkok",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "b19b6b56-ec8c-4317-a8af-b25238ce773d",
+  "versionId": "c5dea5ed-2f56-4dc2-a643-64d095c5e7b3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "YOUR_INSTANCE_ID"
