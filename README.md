@@ -42,7 +42,7 @@ flowchart TB
         A[LINE Group Message]
     end
 
-    subgraph Main["🎫 Auto Ticket 1.7.2 (Main)"]
+    subgraph Main["🎫 Auto Ticket (Main)"]
         B[Webhook Receiver]
         C{Event Type?}
         D{Is IT Group?}
@@ -51,31 +51,31 @@ flowchart TB
         G[Unsend Handler]
     end
 
-    subgraph AI["🤖 CoreAI 1.3.2"]
+    subgraph AI["🤖 CoreAI"]
         H[AI Classification]
         I[Branch Matching]
         J[Category Detection]
     end
 
-    subgraph Assign["👤 Auto Assign 1.2.1"]
+    subgraph Assign["👤 Auto Assign"]
         K[Wait 1 min]
         L[Lookup Ticket]
         M[Update Assigned]
     end
 
-    subgraph Close["🔒 Auto Close 1.2.1"]
+    subgraph Close["🔒 Auto Close"]
         N{Close Pattern?}
         O[Lookup Assigned]
         P[Update Closed]
     end
 
-    subgraph Schedule["⏰ Schedule 1.4.1"]
+    subgraph Schedule["⏰ Schedule"]
         Q[08:00 Trigger]
         R[Get Pending Tickets]
         S[Send Summary Email]
     end
 
-    subgraph Audit["📊 LogSQLServer 1.0.1"]
+    subgraph Audit["📊 LogSQLServer"]
         T[Audit Logger]
     end
 
@@ -131,12 +131,12 @@ flowchart TB
 ├── 📝 .env.sanitizer.example              # Sanitizer configuration template
 │
 ├── 📁 workflows/                          # n8n workflow JSON files
-│   ├── Auto Ticket.json                  # Main workflow (v1.7.1)
-│   ├── Auto Ticket CoreAI.json           # AI classification sub-workflow (v1.3)
-│   ├── Auto Assign.json                  # Auto-assignment sub-workflow (v1.2)
-│   ├── Auto Close Ticket.json            # Auto-close sub-workflow (v1.0)
-│   ├── Schedule Ticket Unclose.json      # Scheduled summary workflow (v1.3)
-│   └── LogSQLServer.json                 # Audit logging sub-workflow (v1.0.1)
+│   ├── Auto Ticket.json                  # Main workflow
+│   ├── Auto Ticket CoreAI.json           # AI classification sub-workflow
+│   ├── Auto Assign.json                  # Auto-assignment sub-workflow
+│   ├── Auto Close Ticket.json            # Auto-close sub-workflow
+│   ├── Schedule Ticket Unclose.json      # Scheduled summary workflow
+│   └── LogSQLServer.json                 # Audit logging sub-workflow
 │
 └── 📁 screenshots/                        # Workflow screenshots
     ├── main-workflow.png
@@ -152,7 +152,7 @@ flowchart TB
 
 ## 🔧 Workflows Overview
 
-### 1️⃣ Auto Ticket 1.7.2 (Main Workflow)
+### 1️⃣ Auto Ticket (Main Workflow)
 The main orchestrator that receives LINE webhooks and routes messages to appropriate handlers.
 
 | Responsibility | Details |
@@ -168,7 +168,7 @@ The main orchestrator that receives LINE webhooks and routes messages to appropr
 
 ---
 
-### 2️⃣ Auto Ticket CoreAI 1.3.2 (AI Classification)
+### 2️⃣ Auto Ticket CoreAI (AI Classification)
 AI-powered ticket classification using Large Language Models.
 
 | AI Task | Model | Output |
@@ -191,7 +191,7 @@ AI-powered ticket classification using Large Language Models.
 
 ---
 
-### 3️⃣ Auto Assign 1.2.1 (Auto-Assignment)
+### 3️⃣ Auto Assign (Auto-Assignment)
 Automatically assigns tickets when IT staff reply to the original message.
 
 ```
@@ -212,7 +212,7 @@ User posts ticket → IT staff replies (quote) → System detects reply
 
 ---
 
-### 4️⃣ Auto Close Ticket 1.2.1 (Auto-Close)
+### 4️⃣ Auto Close Ticket (Auto-Close)
 Automatically closes tickets when IT staff replies with resolution details.
 
 ```
@@ -233,7 +233,7 @@ IT staff replies (quote) → System detects "การแก้ไขปัญ�
 
 ---
 
-### 5️⃣ Schedule Ticket Unclose 1.4.1 (Scheduled Summary)
+### 5️⃣ Schedule Ticket Unclose (Scheduled Summary)
 Sends a summary email of pending tickets to IT lead for follow-up.
 
 | Schedule | Action |
@@ -248,15 +248,15 @@ Sends a summary email of pending tickets to IT lead for follow-up.
 
 ---
 
-### 6️⃣ LogSQLServer 1.0.1 (Audit Logging)
+### 6️⃣ LogSQLServer (Audit Logging)
 Centralized audit logging for all ticket operations across all workflows.
 
 | Action Type | Description | Calling Workflows |
 |-------------|-------------|-------------------|
-| INSERT | New ticket created | Auto Ticket CoreAI 1.3.2 |
-| UPDATE | Ticket assigned | Auto Assign 1.2 |
-| CLOSE | Ticket closed | Auto Close Ticket 1.2.1 |
-| UNSEND | Message unsent by user | Auto Ticket 1.7.1 |
+| INSERT | New ticket created | Auto Ticket CoreAI |
+| UPDATE | Ticket assigned | Auto Assign |
+| CLOSE | Ticket closed | Auto Close Ticket |
+| UNSEND | Message unsent by user | Auto Ticket |
 
 📎 **Workflow:** [`workflows/LogSQLServer.json`](./workflows/LogSQLServer.json)
 

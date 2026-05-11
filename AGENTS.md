@@ -22,15 +22,15 @@
 ## System Flow
 
 ```
-LINE Message → Auto Ticket 1.7.1
+LINE Message → Auto Ticket
                       │
                       ├─► Unsend Event → Update status="unsent" → Log
-                      ├─► IT Staff Reply → Auto Assign 1.2 → Auto Close Ticket 1.0
-                      └─► Ticket Pattern → Auto Ticket CoreAI 1.3 → Create ticket (status="pending")
+                      ├─► IT Staff Reply → Auto Assign → Auto Close Ticket
+                      └─► Ticket Pattern → Auto Ticket CoreAI → Create ticket (status="pending")
 
-Schedule (08:00) → Schedule Ticket Unclose 1.3 → Send summary email to IT_Support@[Company Name].co.th
+Schedule (08:00) → Schedule Ticket Unclose → Send summary email to IT_Support@[Company Name].co.th
 
-All operations → LogSQLServer v1.0.1 → Audit Log
+All operations → LogSQLServer → Audit Log
 ```
 
 ---
@@ -47,7 +47,7 @@ Note: Schedule (08:00) sends summary email of assigned tickets to IT lead (no st
 
 ---
 
-## Main Workflow: Auto Ticket 1.7.1
+## Main Workflow: Auto Ticket
 
 ### Trigger
 | Property | Value |
@@ -87,7 +87,7 @@ Note: Schedule (08:00) sends summary email of assigned tickets to IT lead (no st
 
 ---
 
-## Sub-Workflow: Auto Assign 1.2
+## Sub-Workflow: Auto Assign
 
 ### Purpose
 Handles IT staff replies to assign pending tickets.
@@ -103,7 +103,7 @@ Handles IT staff replies to assign pending tickets.
 
 ---
 
-## Sub-Workflow: Auto Close Ticket 1.2.1
+## Sub-Workflow: Auto Close Ticket
 
 ### Purpose
 Closes assigned tickets when IT staff replies with "การแก้ไขปัญหา".
@@ -137,7 +137,7 @@ Closes assigned tickets when IT staff replies with "การแก้ไขป�
 
 ---
 
-## Sub-Workflow: Auto Ticket CoreAI 1.3.2
+## Sub-Workflow: Auto Ticket CoreAI
 
 ### Purpose
 AI classification using OpenRouter LLM + ticket creation.
@@ -213,7 +213,7 @@ AI classification using OpenRouter LLM + ticket creation.
 
 ---
 
-## Schedule Workflow: Schedule Ticket Unclose 1.3
+## Schedule Workflow: Schedule Ticket Unclose
 
 | Property | Value |
 |----------|-------|
@@ -260,10 +260,10 @@ Start → SELECT TOP (1) by message_id → Set Insert Log → INSERT into [log] 
 | by | User/system who performed action |
 
 ### Called By
-- Auto Ticket 1.7.1 (unsend events)
-- Auto Ticket CoreAI 1.3 (INSERT)
-- Auto Assign 1.2 (UPDATE to assigned)
-- Auto Close Ticket 1.0 (UPDATE to closed)
+- Auto Ticket (unsend events)
+- Auto Ticket CoreAI (INSERT)
+- Auto Assign (UPDATE to assigned)
+- Auto Close Ticket (UPDATE to closed)
 
 ---
 
@@ -408,7 +408,7 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 
 ## Disabled Nodes
 
-### Auto Ticket 1.7.1
+### Auto Ticket
 | Node | Reason |
 |------|--------|
 | Wait (unsend path) | Direct SQL update used instead |
@@ -418,12 +418,12 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 | Embeddings, Vector Store nodes | Not in use |
 | Webhook Line1/2 | Alternative endpoints |
 
-### Auto Assign 1.2
+### Auto Assign
 | Node | Reason |
 |------|--------|
 | Send email To DavMail | Email sending disabled |
 
-### Schedule Ticket Unclose 1.3
+### Schedule Ticket Unclose
 | Node | Reason |
 |------|--------|
 | Loop Over Items | Old v1.2 method - replaced by summary email |
@@ -441,10 +441,10 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 3. **Modifying AI Prompts**: Edit `messages` parameter in Core Agent, Find Branch, or Find Sub Category
 4. **Changing Email Recipients**: Modify `toEmail` in `Send email To DavMail` or `Send email To Lead IT Support` node
 5. **Adding New Event Handlers**: Add conditions to `Switch` node in main workflow
-6. **Modifying Auto-Assign Logic**: Edit nodes in Auto Assign 1.2 workflow
-7. **Modifying Auto-Close Logic**: Edit nodes in Auto Close Ticket 1.2.1 workflow
+6. **Modifying Auto-Assign Logic**: Edit nodes in Auto Assign workflow
+7. **Modifying Auto-Close Logic**: Edit nodes in Auto Close Ticket workflow
 8. **Changing Schedule Time**: Modify `Schedule Trigger` node in Schedule Ticket Unclose (currently 08:00)
-9. **Adjusting Wait Time**: Modify `Wait` node in Auto Assign 1.2 (currently 1 minute)
+9. **Adjusting Wait Time**: Modify `Wait` node in Auto Assign (currently 1 minute)
 10. **IT Group Routing**: Modify `If IT Group` node to change which groupId routes directly to Auto Assign (currently YOUR_IT_GROUP_ID)
 11. **Database Changes**: Modify SQL queries in `Microsoft SQL` nodes when schema changes
 
