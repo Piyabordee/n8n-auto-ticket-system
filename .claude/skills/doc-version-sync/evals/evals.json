@@ -3,20 +3,86 @@
   "evals": [
     {
       "id": 1,
+      "description": "Update AGENTS.md and README.md to sync with latest workflow versions",
       "prompt": "อัพเดท AGENTS.md กับ README.md ให้ sync กับ workflow versions ล่าสุด",
-      "expected_output": "Skill should check workflow JSON versions, identify discrepancies, and update both documentation files with correct version numbers",
+      "expected_output": [
+        "AGENTS.md: Quick Reference table updated with correct workflow versions matching JSON files",
+        "AGENTS.md: Version header date updated to current date",
+        "README.md: Badge version updated to match latest workflow version",
+        "README.md: Workflow Overview section titles updated to match JSON names",
+        "README.md: New changelog entry added with version, date, and change descriptions"
+      ],
       "files": []
     },
     {
       "id": 2,
+      "description": "Scan entire repo for version mismatches between docs and workflows",
       "prompt": "check ใน repo ทั้งหมดสิ้ ว่ามีอะไรยังไม่อัพเดท",
-      "expected_output": "Skill should scan all documentation files, compare with workflow versions, and report any version mismatches or outdated information",
+      "expected_output": [
+        "Reports total count of version mismatches found",
+        "Lists each mismatch with file name, field, expected version (from JSON) vs actual version (in doc)",
+        "Checks all documentation files: AGENTS.md, README.md, SCREENSHOTS.md",
+        "Reports any workflow JSON files in workflows/ that are not documented anywhere"
+      ],
       "files": []
     },
     {
       "id": 3,
+      "description": "Update SCREENSHOTS.md with new/modified screenshot entries",
       "prompt": "update C:\\dev\\n8n-auto-ticket-system\\screenshots ใหม่ยัง",
-      "expected_output": "Skill should check screenshots folder, update SCREENSHOTS.md with missing entries, correct outdated information, and update last modified date",
+      "expected_output": [
+        "SCREENSHOTS.md: Last Updated date changed to current date",
+        "SCREENSHOTS.md: New screenshot entries added for any new workflow images in screenshots/ folder",
+        "SCREENSHOTS.md: Outdated references to deleted images removed",
+        "SCREENSHOTS.md: Workflow version references updated to match current versions"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "description": "No-op: all versions already in sync, skill should not modify any files",
+      "prompt": "เช็คให้หน่อยว่าเวอร์ชันใน AGENTS.md ตรงกับ workflow ทั้งหมดไหม",
+      "expected_output": [
+        "Reports that all versions are already in sync",
+        "No files modified",
+        "Lists each workflow checked and confirms it matches documentation"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "description": "Graceful handling when workflow JSON files are missing",
+      "prompt": "sync docs หน่อย แต่ขอโทษที ไฟล์ workflows จริงดันหาย",
+      "expected_output": [
+        "Reports error: workflow JSON files not found in workflows/ directory",
+        "Does not modify any documentation files",
+        "Suggests user verify that workflow files exist before syncing"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "description": "Handle non-standard version formats (not X.Y.Z)",
+      "prompt": "อัพเดท docs ตามเวอร์ชันล่าสุดใน workflows",
+      "expected_output": [
+        "Extracts version string from workflow JSON name field regardless of format",
+        "Updates AGENTS.md with the exact version string found",
+        "Reports the non-standard version format as a note",
+        "Completes sync without error"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "description": "Multiple workflows changed + generate comprehensive changelog entry",
+      "prompt": "สรุปการเปลี่ยนแปลงทั้งหมดหลังจาก commit batch นี้ แล้วอัปเดตเอกสารให้ด้วย",
+      "expected_output": [
+        "AGENTS.md: Quick Reference table updated for all changed workflows",
+        "AGENTS.md: New workflow added to Quick Reference if any new JSON found",
+        "README.md: New changelog entry added with all changes listed",
+        "README.md: Changelog uses consistent prefixes (New, Enhanced, Updated, Cleanup, Fixed)",
+        "All version references across both files are consistent after update"
+      ],
       "files": []
     }
   ]
