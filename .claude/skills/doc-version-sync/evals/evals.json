@@ -1,0 +1,23 @@
+{
+  "skill_name": "doc-version-sync",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "อัพเดท AGENTS.md กับ README.md ให้ sync กับ workflow versions ล่าสุด",
+      "expected_output": "Skill should check workflow JSON versions, identify discrepancies, and update both documentation files with correct version numbers",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "check ใน repo ทั้งหมดสิ้ ว่ามีอะไรยังไม่อัพเดท",
+      "expected_output": "Skill should scan all documentation files, compare with workflow versions, and report any version mismatches or outdated information",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "update C:\\dev\\n8n-auto-ticket-system\\screenshots ใหม่ยัง",
+      "expected_output": "Skill should check screenshots folder, update SCREENSHOTS.md with missing entries, correct outdated information, and update last modified date",
+      "files": []
+    }
+  ]
+}

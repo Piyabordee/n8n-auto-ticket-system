@@ -42,7 +42,7 @@ flowchart TB
         A[LINE Group Message]
     end
 
-    subgraph Main["🎫 Auto Ticket 1.7.1 (Main)"]
+    subgraph Main["🎫 Auto Ticket 1.7.2 (Main)"]
         B[Webhook Receiver]
         C{Event Type?}
         D{Is IT Group?}
@@ -51,25 +51,25 @@ flowchart TB
         G[Unsend Handler]
     end
 
-    subgraph AI["🤖 CoreAI 1.3"]
+    subgraph AI["🤖 CoreAI 1.3.2"]
         H[AI Classification]
         I[Branch Matching]
         J[Category Detection]
     end
 
-    subgraph Assign["👤 Auto Assign 1.2"]
+    subgraph Assign["👤 Auto Assign 1.2.1"]
         K[Wait 1 min]
         L[Lookup Ticket]
         M[Update Assigned]
     end
 
-    subgraph Close["🔒 Auto Close 1.0"]
+    subgraph Close["🔒 Auto Close 1.2.1"]
         N{Close Pattern?}
         O[Lookup Assigned]
         P[Update Closed]
     end
 
-    subgraph Schedule["⏰ Schedule 1.3"]
+    subgraph Schedule["⏰ Schedule 1.4.1"]
         Q[08:00 Trigger]
         R[Get Pending Tickets]
         S[Send Summary Email]
@@ -152,7 +152,7 @@ flowchart TB
 
 ## 🔧 Workflows Overview
 
-### 1️⃣ Auto Ticket 1.7.1 (Main Workflow)
+### 1️⃣ Auto Ticket 1.7.2 (Main Workflow)
 The main orchestrator that receives LINE webhooks and routes messages to appropriate handlers.
 
 | Responsibility | Details |
@@ -191,7 +191,7 @@ AI-powered ticket classification using Large Language Models.
 
 ---
 
-### 3️⃣ Auto Assign 1.2 (Auto-Assignment)
+### 3️⃣ Auto Assign 1.2.1 (Auto-Assignment)
 Automatically assigns tickets when IT staff reply to the original message.
 
 ```
@@ -233,7 +233,7 @@ IT staff replies (quote) → System detects "การแก้ไขปัญ�
 
 ---
 
-### 5️⃣ Schedule Ticket Unclose 1.3 (Scheduled Summary)
+### 5️⃣ Schedule Ticket Unclose 1.4.1 (Scheduled Summary)
 Sends a summary email of pending tickets to IT lead for follow-up.
 
 | Schedule | Action |
@@ -511,7 +511,15 @@ PLACEHOLDER_COMPANY_BRANCH=Branch Office
 - 🧹 **Cleanup:** Auto Ticket - Removed unused Supabase webhook logging node
 - 🔧 **Enhanced:** LogSQLServer - Added `binaryMode: "separate"` setting
 
-### v1.7.4 (2026-02-18)
+### v1.7.4 (2026-04-21)
+- 📝 **Updated:** Auto Ticket 1.7.1 → 1.7.2
+- 📝 **Updated:** Auto Assign 1.2 → 1.2.1
+- 📝 **Updated:** Schedule Ticket Unclose 1.3 → 1.4.1
+- 📝 **Updated:** Auto Close Ticket 1.0 → 1.2.1
+- 🔧 **Enhanced:** LogSQLServer - Replaced sensitive credential IDs with placeholders
+- 🔧 **Enhanced:** Schedule Ticket Unclose - Improved email sending logic with new conditions
+
+### v1.7.3 (2026-02-18)
 - ✨ **New:** Auto Ticket 1.7.1 - Added "If IT Group" node to route IT group messages directly to Auto Assign
 - 🔧 **Enhanced:** Schedule Ticket Unclose 1.3 - Changed from 18:00 to 08:00 trigger time
 - 🔧 **Enhanced:** Schedule Ticket Unclose 1.3 - Now sends summary email to IT lead instead of updating individual tickets

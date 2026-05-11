@@ -10,11 +10,11 @@
 
 | Workflow | ID | Type | Purpose |
 |----------|-----|------|---------|
-| **Auto Ticket 1.7.1** | `yjqa7NBnaFqtPjBd` | Webhook | Main entry - processes LINE messages |
+| **Auto Ticket 1.7.2** | `yjqa7NBnaFqtPjBd` | Webhook | Main entry - processes LINE messages |
 | **Auto Ticket CoreAI 1.3.2** | `vnzG9J1ipCdgk5Q4` | Sub-Workflow | AI classification & ticket creation |
-| **Auto Assign 1.2** | `4tIlVjstYxU09G6a` | Sub-Workflow | IT reply → assign ticket |
+| **Auto Assign 1.2.1** | `4tIlVjstYxU09G6a` | Sub-Workflow | IT reply → assign ticket |
 | **Auto Close Ticket 1.2.1** | `USgdNP1aNHh1QJg3` | Sub-Workflow | IT reply with "การแก้ไขปัญหา" → close |
-| **Schedule Ticket Unclose 1.3** | `UBCa3WsUnv88uG-4Syw6l` | Schedule | Daily 08:00 - send pending summary |
+| **Schedule Ticket Unclose 1.4.1** | `UBCa3WsUnv88uG-4Syw6l` | Schedule | Daily 08:00 - send pending summary |
 | **LogSQLServer v1.0.1** | `q3ybqMcKYHUTu4qg` | Sub-Workflow | Centralized audit logging |
 
 ---
@@ -455,7 +455,8 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.7.5 | 2026-05-06 | Auto Ticket CoreAI 1.3.1 → 1.3.2: Added #type field (Incident/Service Request), split date/time fields (วันที่เปิด Ticket, เวลาเปิด Ticket). Auto Close Ticket 1.2 → 1.2.1: Split close date/time (วันที่ปิด Ticket, เวลาปิด Ticket). Auto Ticket: Removed unused Supabase webhook logging node. LogSQLServer: Added binaryMode: "separate" setting |
-| 1.7.4 | 2026-02-18 | Auto Ticket 1.7.1: Added "If IT Group" node to route IT group messages directly to Auto Assign. Schedule Ticket Unclose 1.3: Changed from 18:00 to 08:00, now sends summary email to IT lead instead of updating tickets individually |
+| 1.7.4 | 2026-04-21 | Auto Ticket 1.7.1 → 1.7.2, Auto Assign 1.2 → 1.2.1, Schedule Ticket Unclose 1.3 → 1.4.1, Auto Close Ticket 1.0 → 1.2.1. LogSQLServer: Replaced sensitive credential IDs with placeholders. Schedule Ticket Unclose: Improved email sending logic with new conditions |
+| 1.7.3 | 2026-02-18 | Auto Ticket 1.7.1: Added "If IT Group" node to route IT group messages directly to Auto Assign. Schedule Ticket Unclose 1.3: Changed from 18:00 to 08:00, now sends summary email to IT lead instead of updating tickets individually |
 | 1.7.3 | 2026-02-16 | Schedule Unclose: removed 12:00 trigger (now 18:00 only). Auto Close: fixed close_time_minute SQL query |
 | 1.7.1 | 2026-02-09 | Full audit trail with LogSQLServer v1.0.1 for all operations |
 | 1.7 | 2026-02-12 | **Auto Close Ticket 1.0** added for closing tickets with "การแก้ไขปัญหา". Schedule renamed to Unclose. New "closed" and "Unclose" statuses |

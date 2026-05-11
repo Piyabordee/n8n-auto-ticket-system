@@ -11,7 +11,6 @@ node_modules
 # Editor
 .vscode/
 .idea/
-.claude/
 
 # Local credentials backup (just in case)
 *_credentials.json
@@ -28,3 +27,4 @@ SQL/SQLQuery.sql
 create_tables.sql
 *.csv
 replacements.txt
+.claude/settings.local.json
