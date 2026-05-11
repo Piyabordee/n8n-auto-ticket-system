@@ -1,6 +1,6 @@
 # 🎫 Auto Ticket System - AI-Powered IT Helpdesk Automation
 
-[![n8n](https://img.shields.io/badge/n8n-1.7.4-FF6D5A?logo=n8n&logoColor=white)](https://n8n.io)
+[![n8n](https://img.shields.io/badge/n8n-1.7.5-FF6D5A?logo=n8n&logoColor=white)](https://n8n.io)
 [![LINE](https://img.shields.io/badge/LINE-Messaging%20API-00C300?logo=line&logoColor=white)](https://developers.line.biz/)
 [![OpenRouter](https://img.shields.io/badge/AI-OpenRouter%20LLM-6366F1)](https://openrouter.ai/)
 [![Microsoft SQL](https://img.shields.io/badge/Microsoft-SQL%20Server-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/en-us/sql-server/)
@@ -168,7 +168,7 @@ The main orchestrator that receives LINE webhooks and routes messages to appropr
 
 ---
 
-### 2️⃣ Auto Ticket CoreAI 1.3 (AI Classification)
+### 2️⃣ Auto Ticket CoreAI 1.3.2 (AI Classification)
 AI-powered ticket classification using Large Language Models.
 
 | AI Task | Model | Output |
@@ -212,7 +212,7 @@ User posts ticket → IT staff replies (quote) → System detects reply
 
 ---
 
-### 4️⃣ Auto Close Ticket 1.0 (Auto-Close)
+### 4️⃣ Auto Close Ticket 1.2.1 (Auto-Close)
 Automatically closes tickets when IT staff replies with resolution details.
 
 ```
@@ -253,9 +253,9 @@ Centralized audit logging for all ticket operations across all workflows.
 
 | Action Type | Description | Calling Workflows |
 |-------------|-------------|-------------------|
-| INSERT | New ticket created | Auto Ticket CoreAI 1.3 |
+| INSERT | New ticket created | Auto Ticket CoreAI 1.3.2 |
 | UPDATE | Ticket assigned | Auto Assign 1.2 |
-| CLOSE | Ticket closed | Auto Close Ticket 1.0 |
+| CLOSE | Ticket closed | Auto Close Ticket 1.2.1 |
 | UNSEND | Message unsent by user | Auto Ticket 1.7.1 |
 
 📎 **Workflow:** [`workflows/LogSQLServer.json`](./workflows/LogSQLServer.json)
@@ -503,6 +503,13 @@ PLACEHOLDER_COMPANY_BRANCH=Branch Office
 ---
 
 ## 📝 Changelog
+
+### v1.7.5 (2026-05-06)
+- ✨ **New:** Auto Ticket CoreAI 1.3.1 → 1.3.2: Added `#type` field (Incident/Service Request) based on AI intent classification
+- ✨ **New:** Split date/time fields: `#set วันที่เปิด Ticket` (dd-MM-yyyy) and `#set เวลาเปิด Ticket` (HH:mm:ss)
+- ✨ **New:** Auto Close Ticket 1.2 → 1.2.1: Split close date/time (วันที่ปิด Ticket, เวลาปิด Ticket)
+- 🧹 **Cleanup:** Auto Ticket - Removed unused Supabase webhook logging node
+- 🔧 **Enhanced:** LogSQLServer - Added `binaryMode: "separate"` setting
 
 ### v1.7.4 (2026-02-18)
 - ✨ **New:** Auto Ticket 1.7.1 - Added "If IT Group" node to route IT group messages directly to Auto Assign

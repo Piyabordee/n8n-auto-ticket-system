@@ -2,7 +2,7 @@
 
 n8n workflow screenshots and architecture diagrams for the Auto Ticket System.
 
-> **Last Updated**: 2026-02-16
+> **Last Updated**: 2026-05-06
 
 > 📋 **See [README.md](./README.md#-workflows-overview) for workflow versions and details**
 
@@ -15,7 +15,9 @@ n8n workflow screenshots and architecture diagrams for the Auto Ticket System.
 | ![main-workflow](screenshots/main-workflow.png) | Auto Ticket | Main workflow - LINE webhook processing |
 | ![ai-classification](screenshots/ai-classification.png) | Auto Ticket CoreAI | AI classification sub-workflow |
 | ![auto-assign](screenshots/auto-assign.png) | Auto Assign | IT staff reply assignment sub-workflow |
-| ![schedule](screenshots/schedule.png) | Schedule Ticket Unclose | Scheduled unclosed ticket processing |
+| ![auto-close-ticket](screenshots/auto-close-ticket.png) | Auto Close Ticket | Ticket closure with resolution details sub-workflow |
+| ![schedule](screenshots/schedule.png) | Schedule Ticket Unclose | Daily pending ticket summary at 08:00 |
+| ![schedule-ticket-unclose](screenshots/schedule-ticket-unclose.png) | Schedule Ticket Unclose | Full schedule workflow with email node |
 | ![log-sql-server](screenshots/log-sql-server.png) | LogSQLServer | Centralized audit logging workflow |
 
 ### Architecture Diagram
@@ -31,7 +33,9 @@ n8n workflow screenshots and architecture diagrams for the Auto Ticket System.
 | `main-workflow.png` | [workflows/Auto Ticket.json](./workflows/Auto%20Ticket.json) | ✅ Active |
 | `ai-classification.png` | [workflows/Auto Ticket CoreAI.json](./workflows/Auto%20Ticket%20CoreAI.json) | ✅ Active |
 | `auto-assign.png` | [workflows/Auto Assign.json](./workflows/Auto%20Assign.json) | ✅ Active |
+| `auto-close-ticket.png` | [workflows/Auto Close Ticket.json](./workflows/Auto%20Close%20Ticket.json) | ✅ Active |
 | `schedule.png` | [workflows/Schedule Ticket Unclose.json](./workflows/Schedule%20Ticket%20Unclose.json) | ✅ Active |
+| `schedule-ticket-unclose.png` | [workflows/Schedule Ticket Unclose.json](./workflows/Schedule%20Ticket%20Unclose.json) | ✅ Active |
 | `log-sql-server.png` | [workflows/LogSQLServer.json](./workflows/LogSQLServer.json) | ✅ Active |
 
 ## How to Export Screenshots from n8n
@@ -59,7 +63,7 @@ The [architecture.png](screenshots/architecture.png) shows:
 - **Auto Ticket CoreAI** - AI classification with OpenRouter
 - **Auto Assign** - IT staff reply assignment
 - **Auto Close Ticket** - Ticket closure with resolution details
-- **Schedule Ticket Unclose** - Daily unclosed ticket processing (18:00)
+- **Schedule Ticket Unclose** - Daily pending ticket summary at 08:00
 - **LogSQLServer** - Centralized audit logging
 - **Microsoft SQL Server** - Ticket and Log storage
 - **External Services** - FTP, DavMail SMTP, OpenRouter LLM
@@ -76,6 +80,12 @@ The [architecture.png](screenshots/architecture.png) shows:
 For detailed workflow documentation, see [AGENTS.md](./AGENTS.md)
 
 ## Changelog
+
+### 2026-05-06
+- ✅ Added `auto-close-ticket.png` screenshot for Auto Close Ticket 1.2.1 workflow
+- ✅ Added `schedule-ticket-unclose.png` screenshot for full Schedule Ticket Unclose workflow
+- ✅ Fixed schedule trigger time from 18:00 to 08:00
+- ✅ Updated architecture diagram details with correct trigger time
 
 ### 2026-02-16
 - ✅ Moved from screenshots/README.md to root SCREENSHOTS.md

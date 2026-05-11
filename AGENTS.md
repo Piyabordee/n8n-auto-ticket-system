@@ -1,6 +1,6 @@
 # Auto_Ticket_1.7 - n8n Workflow Context Documentation
 
-> **Version**: 1.7.4 | **Date**: 2026-02-18
+> **Version**: 1.7.5 | **Date**: 2026-05-06
 > **Purpose**: Automated IT Helpdesk Ticketing System with Auto-Assignment, Auto-Close & Audit Logging
 > **Integration**: LINE Messaging API + AI Classification + Microsoft SQL Server
 
@@ -11,9 +11,9 @@
 | Workflow | ID | Type | Purpose |
 |----------|-----|------|---------|
 | **Auto Ticket 1.7.1** | `yjqa7NBnaFqtPjBd` | Webhook | Main entry - processes LINE messages |
-| **Auto Ticket CoreAI 1.3** | `vnzG9J1ipCdgk5Q4` | Sub-Workflow | AI classification & ticket creation |
+| **Auto Ticket CoreAI 1.3.2** | `vnzG9J1ipCdgk5Q4` | Sub-Workflow | AI classification & ticket creation |
 | **Auto Assign 1.2** | `4tIlVjstYxU09G6a` | Sub-Workflow | IT reply → assign ticket |
-| **Auto Close Ticket 1.0** | `USgdNP1aNHh1QJg3` | Sub-Workflow | IT reply with "การแก้ไขปัญหา" → close |
+| **Auto Close Ticket 1.2.1** | `USgdNP1aNHh1QJg3` | Sub-Workflow | IT reply with "การแก้ไขปัญหา" → close |
 | **Schedule Ticket Unclose 1.3** | `UBCa3WsUnv88uG-4Syw6l` | Schedule | Daily 08:00 - send pending summary |
 | **LogSQLServer v1.0.1** | `q3ybqMcKYHUTu4qg` | Sub-Workflow | Centralized audit logging |
 
@@ -103,7 +103,7 @@ Handles IT staff replies to assign pending tickets.
 
 ---
 
-## Sub-Workflow: Auto Close Ticket 1.0
+## Sub-Workflow: Auto Close Ticket 1.2.1
 
 ### Purpose
 Closes assigned tickets when IT staff replies with "การแก้ไขปัญหา".
@@ -115,6 +115,8 @@ Closes assigned tickets when IT staff replies with "การแก้ไขป�
 4. Match IT Team profile
 5. **Send email** with commands:
    - Original email body
+   - `#set วันที่ปิด Ticket=<date>` (dd-MM-yyyy format)
+   - `#set เวลาปิด Ticket=<time>` (HH:mm:ss format)
    - `#assign <email>`
    - `#set สาเหตุ=<cause>`
    - `#set การแก้ไขปัญหา=<reason>`
@@ -135,7 +137,7 @@ Closes assigned tickets when IT staff replies with "การแก้ไขป�
 
 ---
 
-## Sub-Workflow: Auto Ticket CoreAI 1.3
+## Sub-Workflow: Auto Ticket CoreAI 1.3.2
 
 ### Purpose
 AI classification using OpenRouter LLM + ticket creation.
@@ -201,8 +203,11 @@ AI classification using OpenRouter LLM + ticket creation.
 3. **Set Branch** (Company/Franchise merge)
 4. **Find Branch** → Match to master list
 5. **Get Sub Category** + **Find Sub Category**
-6. **Set Command Ticket** → Generate #category, #sub_category, #branch
-7. **Set Sub/Body** → Build email subject/body
+6. **Set Command Ticket** → Generate #category, #sub_category, #branch, #type
+7. **Set Sub/Body** → Build email subject/body with:
+   - `#set วันที่เปิด Ticket=<date>` (dd-MM-yyyy format)
+   - `#set เวลาเปิด Ticket=<time>` (HH:mm:ss format)
+   - `#set Type=<Incident|Service Request>` (based on AI intent: INC/SR)
 8. **Microsoft SQL** → INSERT ticket (status="pending")
 9. Call LogSQLServer
 
@@ -437,7 +442,7 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 4. **Changing Email Recipients**: Modify `toEmail` in `Send email To DavMail` or `Send email To Lead IT Support` node
 5. **Adding New Event Handlers**: Add conditions to `Switch` node in main workflow
 6. **Modifying Auto-Assign Logic**: Edit nodes in Auto Assign 1.2 workflow
-7. **Modifying Auto-Close Logic**: Edit nodes in Auto Close Ticket 1.0 workflow
+7. **Modifying Auto-Close Logic**: Edit nodes in Auto Close Ticket 1.2.1 workflow
 8. **Changing Schedule Time**: Modify `Schedule Trigger` node in Schedule Ticket Unclose (currently 08:00)
 9. **Adjusting Wait Time**: Modify `Wait` node in Auto Assign 1.2 (currently 1 minute)
 10. **IT Group Routing**: Modify `If IT Group` node to change which groupId routes directly to Auto Assign (currently YOUR_IT_GROUP_ID)
@@ -449,6 +454,7 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.7.5 | 2026-05-06 | Auto Ticket CoreAI 1.3.1 → 1.3.2: Added #type field (Incident/Service Request), split date/time fields (วันที่เปิด Ticket, เวลาเปิด Ticket). Auto Close Ticket 1.2 → 1.2.1: Split close date/time (วันที่ปิด Ticket, เวลาปิด Ticket). Auto Ticket: Removed unused Supabase webhook logging node. LogSQLServer: Added binaryMode: "separate" setting |
 | 1.7.4 | 2026-02-18 | Auto Ticket 1.7.1: Added "If IT Group" node to route IT group messages directly to Auto Assign. Schedule Ticket Unclose 1.3: Changed from 18:00 to 08:00, now sends summary email to IT lead instead of updating tickets individually |
 | 1.7.3 | 2026-02-16 | Schedule Unclose: removed 12:00 trigger (now 18:00 only). Auto Close: fixed close_time_minute SQL query |
 | 1.7.1 | 2026-02-09 | Full audit trail with LogSQLServer v1.0.1 for all operations |
