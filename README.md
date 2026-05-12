@@ -125,7 +125,6 @@ flowchart TB
 📦 n8n-auto-ticket-system/
 ├── 📄 README.md                           # This file
 ├── 📄 SCREENSHOTS.md                      # Workflow screenshots & diagrams
-├── 📄 AGENTS.md                           # Workflow context documentation
 ├── 📄 LICENSE                             # MIT License
 ├── 🐍 sanitize.py                         # Data sanitizer tool
 ├── 📝 .env.sanitizer.example              # Sanitizer configuration template
@@ -514,9 +513,9 @@ This project includes Claude Code skills for common development tasks. Invoke wi
 ### When to Use
 
 - **Before `git push`** → `/github-sanitize` — dry-run, sanitize, verify no sensitive data
-- **After committing workflow version changes** → `/doc-version-sync` — update AGENTS.md, README.md, SCREENSHOTS.md
+- **After committing workflow version changes** → `/doc-version-sync` — update README.md, SCREENSHOTS.md
 
-Skills are defined in `.claude/skills/` and documented in [AGENTS.md](./AGENTS.md#skills).
+Skills are defined in `.claude/skills/` and documented in `docs/reference/modification-guide.md`.
 
 ---
 

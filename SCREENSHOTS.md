@@ -77,7 +77,7 @@ The [architecture.png](screenshots/architecture.png) shows:
 
 ## Current Workflows
 
-For detailed workflow documentation, see [AGENTS.md](./AGENTS.md)
+For detailed workflow documentation, see [docs/](./docs/_index.md)
 
 ## Changelog
 

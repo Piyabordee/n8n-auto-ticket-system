@@ -1,6 +1,6 @@
 ---
 name: doc-version-sync
-description: This skill should be used when documentation version numbers need to be synchronized with workflow JSON files. Triggers include: update docs, check version sync, sync docs with workflows, update AGENTS.md, update README.md, update SCREENSHOTS.md, check versions, sync documentation, อัพเดทเอกสาร, sync เวอร์ชัน, เช็คเวอร์ชัน, อัพเดท docs, สรุปการเปลี่ยนแปลง, or when the user asks to verify version consistency between workflow files and documentation after commits.
+description: This skill should be used when documentation version numbers need to be synchronized with workflow JSON files. Triggers include: update docs, check version sync, sync docs with workflows, update docs/, update README.md, update SCREENSHOTS.md, check versions, sync documentation, อัพเดทเอกสาร, sync เวอร์ชัน, เช็คเวอร์ชัน, อัพเดท docs, สรุปการเปลี่ยนแปลง, or when the user asks to verify version consistency between workflow files and documentation after commits.
 ---
 
 # Documentation Version Sync Skill
@@ -30,7 +30,8 @@ This skill helps synchronize documentation version numbers with actual workflow 
 ### Documentation files to sync
 | File | Key areas to check |
 |------|-------------------|
-| `AGENTS.md` | Version header, Quick Reference table, section titles, version history |
+| `docs/project/overview.md` | Quick Reference table (workflow IDs and versions) |
+| `docs/features/*.md` | Workflow version in Context Snapshot section |
 | `README.md` | Badge version, Mermaid diagram labels (~6 hardcoded versions), Workflow Overview, changelog |
 | `SCREENSHOTS.md` | Last Updated date, screenshot entries, workflow references |
 
@@ -48,12 +49,12 @@ This skill helps synchronize documentation version numbers with actual workflow 
    - List all workflows and their current versions
 
 3. **Detect undocumented workflows**:
-   - Compare files in `workflows/` against all references in AGENTS.md and README.md
+   - Compare files in `workflows/` against all references in docs/ and README.md
    - Report any JSON files that are not mentioned in any documentation
    - Report any documentation entries that reference workflow files that don't exist
 
 4. **Compare with documentation** to identify discrepancies:
-   - Check AGENTS.md Quick Reference table
+   - Check docs/project/overview.md Quick Reference table
    - Check README.md Workflow Overview section and Mermaid diagram labels
    - Check README.md changelog entries
    - Check SCREENSHOTS.md if it exists
@@ -62,12 +63,11 @@ This skill helps synchronize documentation version numbers with actual workflow 
 
 **Priority order for updates:**
 
-1. **AGENTS.md**
-   - Update version header at the top
+1. **docs/project/overview.md**
    - Update Quick Reference table with correct workflow versions
-   - Update workflow section titles (e.g., "Auto Ticket CoreAI 1.3")
-   - Update version history table with new entries
-   - Update any inline version references in flow descriptions
+
+2. **docs/features/*.md**
+   - Update version in Context Snapshot section of each affected workflow doc
 
 2. **README.md**
    - Update badge version (n8n-1.7.X)
@@ -107,7 +107,8 @@ After making changes, verify:
 
 1. **All version numbers match** across:
    - Workflow JSON files
-   - AGENTS.md Quick Reference table
+   - docs/project/overview.md Quick Reference table
+   - docs/features/*.md Context Snapshot sections
    - README.md Workflow Overview
    - Any inline references
 
