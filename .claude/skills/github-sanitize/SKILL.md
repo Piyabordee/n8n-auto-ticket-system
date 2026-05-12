@@ -1,6 +1,6 @@
 ---
 name: github-sanitize
-description: Sanitize n8n workflows and documentation before publishing to GitHub
+description: Sanitize n8n workflows and documentation before publishing to GitHub. Use this skill whenever the user mentions publishing to GitHub, pushing to public repo, sanitizing workflows, removing sensitive data, cleaning credentials, preparing files for GitHub, push to GitHub, publish workflows, ลบข้อมูล sensitive, push GitHub, publish, sanitize, ก่อน push, ก่อน publish, ทำความสะอาดข้อมูล, ลบ credential, or any action involving making n8n workflow files safe for public visibility.
 ---
 
 # GitHub Publish Sanitization
