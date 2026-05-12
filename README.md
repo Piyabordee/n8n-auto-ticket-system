@@ -502,6 +502,24 @@ PLACEHOLDER_COMPANY_BRANCH=Branch Office
 
 ---
 
+## 🤖 Claude Code Skills
+
+This project includes Claude Code skills for common development tasks. Invoke with `/skill-name` or let Claude auto-trigger from context.
+
+| Skill | Command | Purpose |
+|-------|---------|---------|
+| **github-sanitize** | `/github-sanitize` | Sanitize workflows & docs before pushing to public GitHub |
+| **doc-version-sync** | `/doc-version-sync` | Sync version numbers across docs after workflow changes |
+
+### When to Use
+
+- **Before `git push`** → `/github-sanitize` — dry-run, sanitize, verify no sensitive data
+- **After committing workflow version changes** → `/doc-version-sync` — update AGENTS.md, README.md, SCREENSHOTS.md
+
+Skills are defined in `.claude/skills/` and documented in [AGENTS.md](./AGENTS.md#skills).
+
+---
+
 ## 📝 Changelog
 
 ### v1.7.5 (2026-05-06)

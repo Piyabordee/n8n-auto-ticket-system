@@ -450,6 +450,23 @@ emailBody + "\n#assign " + email_spiceworks + "\n#set สาเหตุ=" + cau
 
 ---
 
+## Skills
+
+Project-specific Claude Code skills are located in `.claude/skills/`. Invoke with `/skill-name` or let Claude auto-trigger from context.
+
+| Skill | Command | Purpose |
+|-------|---------|---------|
+| **github-sanitize** | `/github-sanitize` | Sanitize workflows & docs before pushing to public GitHub (removes credentials, URLs, company names) |
+| **doc-version-sync** | `/doc-version-sync` | Sync version numbers in AGENTS.md, README.md, SCREENSHOTS.md with workflow JSON files after commits |
+
+### When to Use
+
+- **Before pushing to GitHub** → `/github-sanitize` — dry-run, sanitize, verify no sensitive data remains
+- **After committing workflow changes** → `/doc-version-sync` — update all version references in documentation
+- Claude will also auto-trigger these skills when detecting relevant context (e.g., "push to GitHub", "อัพเดทเอกสาร")
+
+---
+
 ## Version History (Recent)
 
 | Version | Date | Changes |
