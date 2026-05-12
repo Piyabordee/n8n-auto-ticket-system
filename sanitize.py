@@ -324,7 +324,7 @@ class Sanitizer:
         all_clean = True
 
         # Files to skip from verification (documentation files)
-        SKIP_FROM_VERIFY = ['GITHUB_PUBLISH_GUIDE.md', 'sanitize.py']
+        SKIP_FROM_VERIFY = ['docs/GITHUB_PUBLISH_GUIDE.md', 'sanitize.py']
 
         # Patterns to verify they DON'T exist (ใช้ค่าจริงจาก .env)
         forbidden_patterns = [

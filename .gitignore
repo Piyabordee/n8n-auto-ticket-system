@@ -16,7 +16,7 @@ node_modules
 *_credentials.json
 
 # Local Documentation
-GITHUB_PUBLISH_GUIDE.md
+docs/GITHUB_PUBLISH_GUIDE.md
 CLAUDE.md
 RESTORE_GUIDE.md
 
