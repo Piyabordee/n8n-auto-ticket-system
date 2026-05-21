@@ -36,6 +36,7 @@
 | `docs/features/auto-close-ticket.md` [[docs/features/auto-close-ticket]] | Resolution detection → ticket closure with #close email commands |
 | `docs/features/schedule-ticket-unclose.md` [[docs/features/schedule-ticket-unclose]] | Daily 08:00 pending ticket summary email to IT lead |
 | `docs/features/audit-logging.md` [[docs/features/audit-logging]] | LogSQLServer centralized audit trail called by all workflows |
+| `docs/features/error-notify-telegram.md` [[docs/features/error-notify-telegram]] | Centralized error notification — catches errors from all workflows, sends to Telegram |
 
 ## Integrations
 

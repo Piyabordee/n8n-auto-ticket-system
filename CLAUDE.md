@@ -113,6 +113,7 @@ python sanitize.py
 - `docs/features/auto-close-ticket.md` [[docs/features/auto-close-ticket]] — Resolution detection → ticket closure
 - `docs/features/schedule-ticket-unclose.md` [[docs/features/schedule-ticket-unclose]] — Daily 08:00 pending ticket summary
 - `docs/features/audit-logging.md` [[docs/features/audit-logging]] — LogSQLServer centralized audit trail
+- `docs/features/error-notify-telegram.md` [[docs/features/error-notify-telegram]] — Centralized error notification to Telegram
 
 ### Integrations
 - `docs/integrations/line-messaging.md` [[docs/integrations/line-messaging]] — LINE Messaging API endpoints and config
