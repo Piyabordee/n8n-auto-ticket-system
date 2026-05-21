@@ -7,18 +7,24 @@
       "name": "Error Trigger",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "notes": "Fired when any workflow with this error workflow configured encounters an error"
     },
     {
       "parameters": {
-        "jsCode": "// Get error data from the Error Trigger\nconst errorData = $input.first().json;\n\nconst execution = errorData.execution || {};\nconst error = errorData.executionError || {};\nconst workflowInfo = errorData.workflow || {};\n\nconst workflowName = workflowInfo.name || 'Unknown Workflow';\nconst workflowId = workflowInfo.id || 'N/A';\nconst executionId = execution.id || 'N/A';\nconst errorNode = error.node ? error.node.name || error.node : 'Unknown Node';\nconst errorMessage = error.message || 'No error message';\nconst timestamp = execution.startedAt || execution.finishedAt || new Date().toISOString();\n\n// Truncate long error messages to avoid Telegram 4096 char limit\nconst truncate = (str, maxLen = 3000) => {\n  if (!str) return 'N/A';\n  const s = String(str);\n  return s.length > maxLen ? s.substring(0, maxLen) + '...' : s;\n};\n\n// Build execution data string\nconst executionData = errorData.executionData ? JSON.stringify(errorData.executionData, null, 2) : 'N/A';\n\n// Count total nodes in execution\nconst nodeCount = executionData !== 'N/A' && errorData.executionData\n  ? Object.keys(errorData.executionData).length\n  : 'N/A';\n\n// Build the message\nconst message = `\n🔴 <b>Workflow Error Alert</b>\n\n📋 <b>Workflow:</b> ${workflowName}\n🆔 <b>Workflow ID:</b> <code>${workflowId}</code>\n⏰ <b>Time:</b> ${new Date(timestamp).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}\n\n⚠️ <b>Error Node:</b> ${errorNode}\n❌ <b>Error Message:</b>\n<code>${truncate(errorMessage, 1000)}</code>\n\n🔗 <b>Execution:</b> <code>${truncate(executionId, 50)}</code>\n📊 <b>Nodes in execution:</b> ${nodeCount}\n\n📝 <b>Full Execution Data:</b>\n<code>${truncate(executionData, 2000)}</code>\n`.trim();\n\nreturn [{\n  json: {\n    workflowName,\n    workflowId,\n    executionId,\n    errorNode,\n    errorMessage: truncate(errorMessage, 500),\n    timestamp,\n    message\n  }\n}];"
+        "jsCode": "const errorData = $input.first().json;\n\nconst execution = errorData.execution || {};\nconst execError = execution.error || {};\nconst workflowInfo = errorData.workflow || {};\nconst execContext = execution.executionContext || {};\n\nconst workflowName = workflowInfo.name || 'Unknown Workflow';\nconst workflowId = workflowInfo.id || 'N/A';\nconst executionId = execution.id || 'N/A';\nconst executionUrl = execution.url || 'N/A';\n\nconst errorNodeInfo = execError.node || {};\nconst errorNode = errorNodeInfo.name || execution.lastNodeExecuted || 'Unknown Node';\nconst errorNodeType = errorNodeInfo.type || 'N/A';\nconst errorMessage = execError.message || 'No error message';\nconst errorDescription = execError.description || '';\nconst errorStack = execError.stack || '';\n\nconst timestamp = execContext.establishedAt\n  ? new Date(execContext.establishedAt).toISOString()\n  : new Date().toISOString();\n\nconst truncate = (str, maxLen = 3000) => {\n  if (!str) return 'N/A';\n  const s = String(str);\n  return s.length > maxLen ? s.substring(0, maxLen) + '...' : s;\n};\n\nconst message = `\n🔴 <b>Workflow Error Alert</b>\n\n📋 <b>Workflow:</b> ${workflowName}\n🆔 <b>Workflow ID:</b> <code>${workflowId}</code>\n⏰ <b>Time:</b> ${new Date(timestamp).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}\n\n⚠️ <b>Error Node:</b> ${errorNode}\n📌 <b>Node Type:</b> ${errorNodeType}\n❌ <b>Error:</b> ${errorDescription}\n💬 <b>Message:</b>\n<code>${truncate(errorMessage, 1000)}</code>\n\n🔗 <b>Execution:</b> <a href=\"${executionUrl}\">${executionId}</a>\n🔍 <b>Mode:</b> ${execution.mode || 'N/A'}\n${execution.lastNodeExecuted ? '🏃 <b>Last Node:</b> ' + execution.lastNodeExecuted : ''}\n\n📝 <b>Stack Trace:</b>\n<code>${truncate(errorStack, 2000)}</code>\n`.trim();\n\nreturn [{\n  json: {\n    workflowName,\n    workflowId,\n    executionId,\n    executionUrl,\n    errorNode,\n    errorNodeType,\n    errorMessage: truncate(errorMessage, 500),\n    errorDescription,\n    timestamp,\n    message\n  }\n}];"
       },
       "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
       "name": "Format Error Message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "notes": "Parse error data and build a formatted Telegram message"
     },
     {
@@ -35,7 +41,10 @@
       "name": "Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [760, 300],
+      "position": [
+        760,
+        300
+      ],
       "credentials": {
         "telegramApi": {
           "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
@@ -52,7 +61,10 @@
       "name": "Log Notification",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1020, 300],
+      "position": [
+        1020,
+        300
+      ],
       "notes": "Optional: Log the notification for audit trail"
     }
   ],
@@ -99,7 +111,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": ""
   },
-  "versionId": "error-notify-telegram-1.0.0",
+  "versionId": "error-notify-telegram-1.0.1",
   "tags": [],
   "triggerCount": 1
 }

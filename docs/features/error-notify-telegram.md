@@ -52,19 +52,24 @@ n8n supports a **global error workflow** via `settings.errorWorkflow`. When conf
 ```
 🔴 Workflow Error Alert
 
-📋 Workflow: Auto Ticket 1.7.2
-🆔 Workflow ID: xxxxx
+📋 Workflow: Auto Ticket CoreAI 1.4
+🆔 Workflow ID: vnzG9J1ipCdgk5Q4
 ⏰ Time: 21/5/2567 14:30:00
 
-⚠️ Error Node: Microsoft SQL
-❌ Error Message:
-   Connection timeout after 30000ms
+⚠️ Error Node: FInd Branch
+📌 Node Type: @n8n/n8n-nodes-langchain.chainLlm
+❌ Error: Provider returned error
+💬 Message:
+   OpenAI: Rate limit reached
 
-🔗 Execution: xxxxx
-📊 Nodes in execution: 23
+🔗 Execution: 37826 (clickable link)
+🔍 Mode: integrated
+🏃 Last Node: FInd Branch
 
-📝 Full Execution Data:
-   {... truncated execution data ...}
+📝 Stack Trace:
+   NodeOperationError: OpenAI: Rate limit reached
+   at ChainLlm.node.ts:115:13
+   ...
 ```
 
 ---
@@ -152,31 +157,35 @@ Connect them in parallel after `Format Error Message`.
 
 ## Error Data Structure
 
-The Error Trigger provides this data structure:
+The Error Trigger provides this data structure (verified from production):
 
 ```json
 {
   "execution": {
-    "id": "execution-uuid",
-    "url": "https://your-n8n.com/execution/123",
-    "startedAt": "2026-05-21T07:30:00.000Z",
-    "finishedAt": "2026-05-21T07:30:05.000Z"
-  },
-  "executionError": {
-    "message": "Connection timeout after 30000ms",
-    "node": {
-      "name": "Microsoft SQL",
-      "type": "n8n-nodes-base.microsoftSql",
-      "parameters": { ... }
+    "id": "37826",
+    "url": "https://your-n8n.com/workflow/xxx/executions/37826",
+    "error": {
+      "message": "OpenAI: Rate limit reached",
+      "description": "Provider returned error",
+      "name": "NodeOperationError",
+      "node": {
+        "name": "FInd Branch",
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "parameters": { ... }
+      },
+      "stack": "NodeOperationError: OpenAI: Rate limit reached\n    at ..."
+    },
+    "lastNodeExecuted": "FInd Branch",
+    "mode": "integrated",
+    "executionContext": {
+      "establishedAt": 1779344384551,
+      "triggerNode": { "name": "Webhook Line", "type": "n8n-nodes-base.webhook" },
+      "parentExecutionId": "37825"
     }
   },
   "workflow": {
-    "id": "workflow-uuid",
-    "name": "Auto Ticket 1.7.2"
-  },
-  "executionData": {
-    "startNode": { ... },
-    "failedNode": { ... }
+    "id": "vnzG9J1ipCdgk5Q4",
+    "name": "Auto Ticket CoreAI 1.4"
   }
 }
 ```
