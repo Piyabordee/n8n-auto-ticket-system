@@ -39,6 +39,7 @@
 | Adding new integrations | `docs/integrations/external-services.md` |
 | Changing email templates | `docs/features/auto-close-ticket.md` or `docs/features/schedule-ticket-unclose.md` |
 | Debugging event routing | `docs/features/auto-ticket.md` + `docs/architecture/system-flow.md` |
+| Creating manual tickets | `docs/features/manual-ticket.md` |
 
 ---
 
@@ -57,7 +58,7 @@ n8n-auto-ticket-system/
 │   ├── integrations/             # External service integration details
 │   └── reference/                # Expressions, sanitization, modification guide
 ├── screenshots/                  # Workflow diagrams (PNG) + architecture (Mermaid)
-├── workflows/                    # n8n workflow JSON exports (7 files)
+├── workflows/                    # n8n workflow JSON exports (8 files)
 ├── SQL/                          # Analytics queries
 ├── CLAUDE.md                     # This file — project hub
 ├── README.md                     # Public-facing documentation
@@ -114,6 +115,7 @@ python sanitize.py
 - `docs/features/schedule-ticket-unclose.md` [[docs/features/schedule-ticket-unclose]] — Daily 08:00 pending ticket summary
 - `docs/features/audit-logging.md` [[docs/features/audit-logging]] — LogSQLServer centralized audit trail
 - `docs/features/error-notify-telegram.md` [[docs/features/error-notify-telegram]] — Centralized error notification to Telegram
+- `docs/features/manual-ticket.md` [[docs/features/manual-ticket]] — Manual ticket creation via form (AI-classified)
 
 ### Integrations
 - `docs/integrations/line-messaging.md` [[docs/integrations/line-messaging]] — LINE Messaging API endpoints and config

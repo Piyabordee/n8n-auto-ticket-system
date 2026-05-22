@@ -37,6 +37,7 @@
 | `docs/features/schedule-ticket-unclose.md` [[docs/features/schedule-ticket-unclose]] | Daily 08:00 pending ticket summary email to IT lead |
 | `docs/features/audit-logging.md` [[docs/features/audit-logging]] | LogSQLServer centralized audit trail called by all workflows |
 | `docs/features/error-notify-telegram.md` [[docs/features/error-notify-telegram]] | Centralized error notification — catches errors from all workflows, sends to Telegram |
+| `docs/features/manual-ticket.md` [[docs/features/manual-ticket]] | Manual ticket creation via n8n form — AI classifies category, branch, sub-category automatically |
 
 ## Integrations
 

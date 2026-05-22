@@ -58,6 +58,14 @@ LINE Message → Auto Ticket (Webhook)
                                      ├─► SQL INSERT ticket (status="pending")
                                      └─► LogSQLServer
 
+Manual Ticket (Execute Workflow Form)
+ └─► AI Classification (category, intent, branch, reporter)
+ ├─► Find Branch (match to master list)
+ ├─► Find Sub Category
+ ├─► SQL INSERT ticket (status="pending", chatname="Manual Ticket")
+ ├─► Send Email (helpdesk notification)
+ └─► LogSQLServer
+
 Schedule (Daily 08:00 Asia/Bangkok)
  └─► Schedule Ticket Unclose
         └─► SQL SELECT assigned tickets → Email summary to IT lead
@@ -77,6 +85,10 @@ Auto Ticket CoreAI
 
 Auto Assign
  └── Execute Workflow → LogSQLServer (UPDATE)
+
+Manual Ticket (standalone — not called by Auto Ticket)
+ ├── Execute Workflow → LogSQLServer (INSERT)
+ └── AI Chain → SQL INSERT → Email → LogSQLServer
 
 Auto Close Ticket
  └── Execute Workflow → LogSQLServer (CLOSE)
