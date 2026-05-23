@@ -38,6 +38,8 @@ User posts in LINE:
 → When IT staff replies → Auto-assigned to them
 → When resolved with "การแก้ไขปัญหา" → Auto-closed
 → All actions logged for audit
+
+IT staff can also manually close tickets via n8n form.
 ```
 
 ---
@@ -54,9 +56,10 @@ flowchart LR
     F -->|Yes| G[Auto Close]
     F -->|No| H[LogSQLServer]
     I[Schedule 08:00] --> J[Pending Summary]
+    K[Manual Form] --> L[Manual Close]
     C --> H
     G --> H
-    H --> K[(SQL Server)]
+    H --> M[(SQL Server)]
 ```
 
 *Full architecture: [docs/architecture/system-flow.md](./docs/architecture/system-flow.md)*
@@ -71,10 +74,12 @@ flowchart LR
 | 📱 LINE Integration | LINE Messaging API (real-time) |
 | 👤 Auto-Assignment | Quote reply detection |
 | 🔒 Auto-Close | Pattern detection (การแก้ไขปัญหา) |
+| ✋ Manual Close | n8n form for manual ticket closure |
 | ⏰ Daily Reminders | Scheduled 08:00 pending summary |
 | 📊 Full Audit Trail | Microsoft SQL Server logging |
 | 🔄 Unsend Handling | Message retraction detection |
 | 📸 Media Support | FTP upload + hyperlinks |
+| 🚨 Error Notify | Telegram alerts for workflow errors |
 
 ---
 
@@ -168,6 +173,10 @@ SQL_DATABASE=YourDatabase
 ---
 
 ## 📋 Latest Changes
+
+**v1.7.6 (2026-05-24)**
+- Added Manual Close Ticket workflow — close assigned tickets via n8n form
+- Improved Error Notify Telegram — escape HTML entities, enhanced error handling
 
 **v1.7.5 (2026-05-06)**
 - Added `#type` field (Incident/Service Request)

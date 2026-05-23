@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.6] - 2026-05-24
+
+### Added
+- Manual Close Ticket workflow — close assigned tickets via n8n form (messageId, close_cause, close_reason)
+
+### Changed
+- Error Notify Telegram: Escape HTML entities in error messages to prevent parsing issues
+- Error Notify Telegram: Improved error handling and message formatting
+
+---
+
 ## [1.7.5] - 2026-05-06
 
 ### Added
